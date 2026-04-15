@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "@ds/components": ["../components/src/index.ts"],
+      "@figma/code-connect/figma-types": ["./node_modules/@figma/code-connect/figma-types"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}

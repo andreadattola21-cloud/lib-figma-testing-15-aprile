@@ -1,0 +1,120 @@
+/* ─── Base ────────────────────────────────────────────────── */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ds-space-2);
+  border: 1px solid transparent;
+  border-radius: var(--ds-radius-md);
+  font-family: var(--ds-font-family-sans);
+  font-weight: var(--ds-font-weight-medium);
+  line-height: var(--ds-line-height-tight);
+  cursor: pointer;
+  transition:
+    background-color var(--ds-transition-fast),
+    border-color var(--ds-transition-fast),
+    color var(--ds-transition-fast),
+    box-shadow var(--ds-transition-fast);
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--ds-color-border-focus);
+  outline-offset: 2px;
+}
+
+/* ─── Sizes ───────────────────────────────────────────────── */
+.size-sm {
+  padding: var(--ds-space-1) var(--ds-space-3);
+  font-size: var(--ds-font-size-sm);
+  min-height: 32px;
+}
+
+.size-md {
+  padding: var(--ds-space-2) var(--ds-space-4);
+  font-size: var(--ds-font-size-md);
+  min-height: 40px;
+}
+
+.size-lg {
+  padding: var(--ds-space-3) var(--ds-space-6);
+  font-size: var(--ds-font-size-lg);
+  min-height: 48px;
+}
+
+/* ─── Variants ────────────────────────────────────────────── */
+.variant-primary {
+  background-color: var(--ds-color-action-primary-default);
+  color: var(--ds-color-action-primary-text);
+}
+
+.variant-primary:hover:not(:disabled) {
+  background-color: var(--ds-color-action-primary-hover);
+}
+
+.variant-secondary {
+  background-color: var(--ds-color-action-secondary-default);
+  color: var(--ds-color-action-secondary-text);
+  border-color: var(--ds-color-action-secondary-border);
+}
+
+.variant-secondary:hover:not(:disabled) {
+  background-color: var(--ds-color-action-secondary-hover);
+}
+
+.variant-danger {
+  background-color: var(--ds-color-action-danger-default);
+  color: var(--ds-color-action-danger-text);
+}
+
+.variant-danger:hover:not(:disabled) {
+  background-color: var(--ds-color-action-danger-hover);
+}
+
+.variant-ghost {
+  background-color: transparent;
+  color: var(--ds-color-text-default);
+}
+
+.variant-ghost:hover:not(:disabled) {
+  background-color: var(--ds-color-bg-subtle);
+}
+
+/* ─── States ──────────────────────────────────────────────── */
+.button:disabled,
+.loading {
+  background-color: var(--ds-color-action-disabled-bg);
+  color: var(--ds-color-action-disabled-text);
+  border-color: var(--ds-color-action-disabled-border);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+/* ─── Icon wrapper ────────────────────────────────────────── */
+.icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ─── Spinner ─────────────────────────────────────────────── */
+.spinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

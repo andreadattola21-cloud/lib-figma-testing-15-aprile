@@ -1,0 +1,20 @@
+{
+  "name": "@ds/code-connect",
+  "version": "0.0.1",
+  "description": "Figma Code Connect mappings for the design system",
+  "private": true,
+  "scripts": {
+    "code-connect:publish": "figma connect publish",
+    "code-connect:unpublish": "figma connect unpublish",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ds/components": "*"
+  },
+  "devDependencies": {
+    "@figma/code-connect": "^1.0.0",
+    "@types/react": "^18.3.0",
+    "react": "^18.3.0",
+    "typescript": "^5.4.0"
+  }
+}
