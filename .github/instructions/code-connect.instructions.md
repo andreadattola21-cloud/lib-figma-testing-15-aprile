@@ -66,13 +66,18 @@ onToggle={(i) => setOpenIndex(i)}
 
 ## Anti-patterns
 
+### 📖 From official Figma docs:
+- Skipping child components → "The nested instance also must be connected separately"
+- Conditionals (`{x && <Y/>}`, ternaries) → "output verbatim rather than executed" — use `figma.boolean` mapping
+- Instance node ID from URL → "connect the backing component, not the instance itself"
+
+### 🔧 From practical experience (NOT in Figma docs):
 - `props: {}` (empty) → Omit `props` entirely or map real properties
 - `.figma.ts` with JSX → Always `.figma.tsx`
-- Instance node ID → Use `mainComponentNodeId` from `get_code_connect_suggestions`
-- Template literal URL → Use string literal
-- Optional chaining on mapped props (`title?.text`) → Code Connect parser rejects it; use static fallbacks
-- `{expr && <Tag/>}` conditional rendering → Parser can't resolve `&&`; render unconditionally or use `figma.boolean` mapping
-- Skipping child components → Every nested Figma library component needs its own `figma.connect()`
+- Template literal URL → Parser rejects; use string literal
+- Optional chaining on mapped props (`title?.text`) → `ParserError`; use static fallbacks
+- `{expr && <Tag/>}` → Parser may crash (not just verbatim output); use `figma.boolean` true/false
+- `() => navigate("/path")` → TS compilation error (undefined var); use `() => {}`
 
 ## Child Component Nesting (MANDATORY)
 

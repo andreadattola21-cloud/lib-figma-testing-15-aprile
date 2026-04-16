@@ -41,18 +41,12 @@ Never skip `get_metadata`. Never guess pixel values.
 | Border radius          | `--ds-radius-*`           | `--ds-radius-200` = 8px |
 | Typography size        | `--ds-scale-*`            | `--ds-scale-03` = 16px |
 | Font family            | `--ds-family-*`           | `--ds-family-sans` |
-| Font weight            | `--ds-weight-*`           | ⚠️ See §3b — use raw numeric values |
+| Font weight            | `--ds-weight-*`           | `--ds-weight-bold` |
 | Stroke                 | `--ds-stroke-*`           | `--ds-stroke-border` = 1px |
 | Shadow / depth         | `--ds-depth-*`            | `--ds-depth-200` |
 
 Run `get_variable_defs` if unsure which token to use — never guess values.
 If a semantic token resolves to `#NaN`, use the primitive color token instead.
-
-## 3b. Font-weight — Known `--ds-weight-*` Token Bug
-
-The `--ds-weight-*` tokens in `tokens.css` include invalid `px` units (e.g. `600px`).
-Browsers silently ignore `font-weight: 600px` and fall back to `normal` (400).
-**Always use raw numeric font-weight values**: `font-weight: 600`, NOT `var(--ds-weight-semibold)`.
 
 ## 4. Component Conventions
 
@@ -90,7 +84,8 @@ prop accepts `ReactNode` or `ReactNode[]`. If the prop accepts a data array
 (e.g. `FooterLinkColumn[]`, `AccordionItemData[]`), use a static example instead.
 
 ### Child component nesting (MANDATORY)
-**"The nested instance also must be connected separately."** — Figma docs
+> 📖 **Official Figma docs**: "The nested instance also must be connected separately."
+> "Make sure to connect the backing component of that instance, not the instance itself."
 
 When connecting a composition, the parent's Code Connect does NOT cover children.
 Every Figma component visible in Dev Mode needs its own `figma.connect()` call.
@@ -101,6 +96,14 @@ Steps:
 3. Simple children (bold text, single link) can be connected as native elements
 4. Publish with `--skip-validation` (external library nodes may fail strict validation)
 5. Verify: `get_code_connect_suggestions` should return empty list
+
+### Conditional rendering in examples
+> 📖 **Official Figma docs**: "Logical operators such as ternaries or conditionals
+> will be output verbatim in your example code rather than executed."
+
+Use `figma.boolean("PropName", { true: <Element />, false: undefined })` to
+conditionally include elements. Do NOT use `{expr && <Tag/>}` or ternaries
+with mapped props — the parser may reject them or output them as literal text.
 
 ## 6. File Placement
 

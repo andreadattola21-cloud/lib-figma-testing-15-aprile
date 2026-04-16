@@ -20,24 +20,12 @@ followed every time components are generated from Figma.
 - Don't invent breakpoints — Figma designs are static. Only add responsive
   behavior where truly needed, and document the reasoning.
 
-## 2b. Layout values — extract literally from `get_design_context` (CRITICAL)
-
-- **`flex-wrap`**: if Figma says `flex flex-wrap`, you MUST add `flex-wrap: wrap` — never omit it
-- **Fixed widths**: if Figma specifies `w-[262px]` on a child, use `width: 262px` — not `flex: 1`
-- **`flex: 1 0 0` vs `flex: 1`**: read the EXACT shorthand. `flex-[1_0_0]` means `flex: 1 0 0` (shrink=0), NOT `flex: 1`
-- **min-width**: if Figma says `min-w-[240px]`, set `min-width: 240px`
-- **Gap on the slot/grid container**: read the gap from the direct parent container, not the section wrapper
-- **Padding asymmetry**: Figma may use `pt-[32px] pb-[160px] px-[32px]` — do NOT simplify to `padding: 32px`
-
-## 2c. Font-weight — known `--ds-weight-*` token bug
-
-The `--ds-weight-*` tokens in `tokens.css` include invalid `px` units (e.g. `600px`).
-Browsers silently ignore `font-weight: 600px` and fall back to `normal` (400).
-**Always use raw numeric font-weight values**: `font-weight: 600`, NOT `var(--ds-weight-semibold)`.
-
 ## 3. Code Connect — Extension and URL rules
 
-- Files containing JSX must use `.figma.tsx` extension, not `.ts`.
+> 📖 **Official Figma docs**: Code Connect files use `.figma.tsx` for React JSX.
+> "Make sure to connect the backing component of that instance, not the instance itself."
+
+🔧 **From practical experience**:
 - Figma URLs must be string literals — template literals are rejected by the parser.
 - Node IDs must come from `get_code_connect_suggestions`, never use placeholders
   or instance IDs from URLs.
@@ -74,6 +62,8 @@ example: () => (
 
 ## 5. Code Connect — Callback props
 
+🔧 **From practical experience** (TS compilation error, not CC parser):
+
 All callback/event handler props MUST use noop `() => {}` in examples.
 NEVER reference undefined variables:
 
@@ -88,6 +78,8 @@ onToggle={() => {}}
 ```
 
 ## 6. Code Connect — Empty props
+
+🔧 **From practical experience**:
 
 NEVER use `props: {}` (empty object). It provides no value to developers.
 Either map real Figma properties or omit the `props` block entirely.
@@ -120,7 +112,8 @@ Either map real Figma properties or omit the `props` block entirely.
 
 ## 9. Child component Code Connect — MANDATORY nesting rule
 
-**"The nested instance also must be connected separately."** — Figma docs
+> 📖 **Official Figma docs**: "The nested instance also must be connected separately."
+> "Make sure to connect the backing component of that instance, not the instance itself."
 
 When connecting a composition, the parent's Code Connect does NOT cover children.
 Every Figma component visible in Dev Mode needs its own `figma.connect()` call.
@@ -135,8 +128,24 @@ Every Figma component visible in Dev Mode needs its own `figma.connect()` call.
 4. Publish with `--skip-validation` (external library nodes may fail validation)
 5. Verify: call `get_code_connect_suggestions` again — list should be empty
 
-### Key rules:
-- `figma.children("*")` in the parent references child instances — those children MUST have their own Code Connect
-- `figma.instance("PropName")` also requires the swapped component to be connected
-- NEVER leave child components unmapped
-- Optional chaining on mapped props (e.g. `title?.text`) breaks the Code Connect parser — use static fallbacks
+## 10. Code Connect — Conditional rendering in examples
+
+> 📖 **Official Figma docs**: "Logical operators such as ternaries or conditionals
+> will be output verbatim in your example code rather than executed."
+
+🔧 **From practical experience**: the parser may also outright **reject** `{expr && <Tag/>}`
+with a `ParserError`, not just output it verbatim.
+
+Use `figma.boolean("PropName", { true: <Element />, false: undefined })` instead.
+
+## 11. Code Connect — Parser-breaking patterns
+
+🔧 **All from practical experience** (NOT documented by Figma):
+
+| Pattern | Parser behavior | Workaround |
+|---|---|---|
+| `title?.text` (optional chaining on mapped prop) | `ParserError: Could not find prop mapping` | Use static string or simpler mapping |
+| Template literal URL `` `https://...` `` | Parser rejects, requires string literal | Use `"https://..."` |
+| `figma.children("Slot")` on data-driven component | Returns `ReactNode[]`, type mismatch at TS level | Use static example with data |
+| `props: {}` (empty) | No error, but useless for developers | Map real props or omit `props` |
+| Referencing undefined vars (`navigate`) | TS compilation error | Use `() => {}` |

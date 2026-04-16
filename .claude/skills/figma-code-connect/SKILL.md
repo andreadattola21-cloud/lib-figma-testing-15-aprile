@@ -185,22 +185,29 @@ Does the React component accept ReactNode children?
 
 ## Anti-patterns (NEVER do these)
 
+### 📖 From official Figma docs:
+| ❌ Anti-pattern | Why it fails | ✅ Correct approach |
+|---|---|---|
+| Skipping child components | "The nested instance also must be connected separately" | Connect each child with its own `figma.connect()` |
+| Instance node ID from URL | "Connect the backing component, not the instance itself" | `mainComponentNodeId` from `get_code_connect_suggestions` |
+| `{expr && <Tag/>}` or ternaries | "Logical operators will be output verbatim rather than executed" | `figma.boolean("Prop", { true: <El />, false: undefined })` |
+
+### 🔧 From practical experience (NOT in Figma docs):
 | ❌ Anti-pattern | Why it fails | ✅ Correct approach |
 |---|---|---|
 | `figma.children("Slot")` on data-driven component | Returns `ReactNode[]` but prop expects `DataObject[]` | Static example with data |
 | `props: {}` (empty object) | Useless for developers in Figma | Map real props or omit `props` |
-| `() => navigate("/path")` in example | `navigate` is undefined → TS error | `() => {}` |
+| `() => navigate("/path")` in example | `navigate` is undefined → TS compilation error | `() => {}` |
 | Template literal URL | Parser rejects template literals | String literal `"https://..."` |
-| Instance node ID from URL | `get_context_for_code_connect` fails | `mainComponentNodeId` from suggestions |
 | `.figma.ts` extension with JSX | TS won't parse JSX in `.ts` | Always `.figma.tsx` |
+| `title?.text` in example JSX | `ParserError: Could not find prop mapping` | Use static fallback string or simpler prop mapping |
+| `{expr && <Tag/>}` conditional rendering | Parser may also **crash** (not just verbatim) | Render unconditionally; use `figma.boolean` mapping |
 | Hardcoded `fileKey` from env var | Code Connect needs literal URLs | Use full string literal URL |
-| Skipping child components | Children show "No code connected" in Dev Mode | Connect each child separately |
-| `title?.text` in example JSX | Code Connect parser rejects optional chaining on mapped props | Use static fallback string or simpler prop mapping |
-| `{expr && <Tag/>}` conditional rendering | Code Connect parser can't resolve `&&` logical expressions | Render element unconditionally; use `figma.boolean` true/false mapping to control inclusion |
 
 ## 8. Child component nesting (MANDATORY)
 
-**Official Figma docs: "The nested instance also must be connected separately."**
+> 📖 **Official Figma docs**: "The nested instance also must be connected separately."
+> "Make sure to connect the backing component of that instance, not the instance itself."
 
 When connecting a composition, the parent's Code Connect does NOT cover children.
 Every Figma library component visible in Dev Mode needs its own `figma.connect()`.
