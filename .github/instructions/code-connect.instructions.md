@@ -71,6 +71,7 @@ onToggle={(i) => setOpenIndex(i)}
 - Instance node ID → Use `mainComponentNodeId` from `get_code_connect_suggestions`
 - Template literal URL → Use string literal
 - Optional chaining on mapped props (`title?.text`) → Code Connect parser rejects it; use static fallbacks
+- `{expr && <Tag/>}` conditional rendering → Parser can't resolve `&&`; render unconditionally or use `figma.boolean` mapping
 - Skipping child components → Every nested Figma library component needs its own `figma.connect()`
 
 ## Child Component Nesting (MANDATORY)
