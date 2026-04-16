@@ -1,5 +1,5 @@
 ---
-identifier: figma-code-connect
+name: figma-code-connect
 description: >
   Connect a Figma component to its React implementation by creating or
   updating a .figma.ts file in packages/code-connect/src/. Use this when
@@ -46,8 +46,9 @@ library component to its React counterpart in `@ds/components`.
    - Compositions: `src/compositions/[ComponentName]/`
    Read the `.types.ts` file to understand all available props.
 
-6. **Create the `.figma.ts` file** at:
-   `packages/code-connect/src/[ComponentName].figma.ts`
+6. **Create the `.figma.tsx` file** at:
+   `packages/code-connect/src/[ComponentName].figma.tsx`
+   (MUST be `.figma.tsx` for files with JSX, NOT `.figma.ts`)
 
    Use this template:
    ```ts
@@ -87,3 +88,7 @@ library component to its React counterpart in `@ds/components`.
 - If a prop has no code equivalent (purely visual), omit it — don't invent props
 - For icon instance swaps, leave a comment placeholder until icons are connected
 - Never hardcode `fileKey` — use the env var `FIGMA_FILE_KEY`
+- Instance node IDs (from URL `?node-id=`) fail with `get_context_for_code_connect`;
+  always use `get_code_connect_suggestions` to find the `mainComponentNodeId`
+- Properties that belong to nested instances (child components) cannot be mapped
+  at the parent component level — use static examples instead of `figma.string()`/`figma.boolean()` for those

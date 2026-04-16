@@ -85,11 +85,56 @@ function figmaNameToCssVar(name: string): string {
     .replace(/\s+/g, "-")}`;
 }
 
+interface FigmaVariableAlias {
+  type: "VARIABLE_ALIAS";
+  id: string;
+}
+
+function isVariableAlias(value: unknown): value is FigmaVariableAlias {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    (value as Record<string, unknown>).type === "VARIABLE_ALIAS"
+  );
+}
+
+function resolveAlias(
+  alias: FigmaVariableAlias,
+  variables: Record<string, FigmaVariable>,
+  defaultModeForVar: (variable: FigmaVariable) => string | undefined,
+  visited: Set<string> = new Set()
+): unknown {
+  if (visited.has(alias.id)) return undefined; // circular reference guard
+  visited.add(alias.id);
+
+  const referenced = variables[alias.id];
+  if (!referenced) return undefined;
+
+  const modeId = defaultModeForVar(referenced);
+  if (!modeId) return undefined;
+
+  const value = referenced.valuesByMode[modeId];
+  if (isVariableAlias(value)) {
+    return resolveAlias(value, variables, defaultModeForVar, visited);
+  }
+  return value;
+}
+
 async function syncTokens() {
   console.log("Fetching Figma variables...");
   const data = await fetchFigmaVariables();
 
   const variables = Object.values(data.meta.variables);
+  const variablesById = data.meta.variables;
+  const collections = data.meta.variableCollections;
+
+  function getDefaultModeId(variable: FigmaVariable): string | undefined {
+    const collection = Object.values(collections).find(
+      (c) => c.variableIds.includes(variable.id)
+    );
+    return collection?.modes[0]?.modeId;
+  }
+
   const cssLines: string[] = [
     "/**",
     " * Design Tokens",
@@ -101,16 +146,17 @@ async function syncTokens() {
   ];
 
   for (const variable of variables) {
-    const collection = Object.values(data.meta.variableCollections).find(
-      (c) => c.variableIds.includes(variable.id)
-    );
-
-    // Use the first (default) mode
-    const defaultModeId = collection?.modes[0]?.modeId;
+    const defaultModeId = getDefaultModeId(variable);
     if (!defaultModeId) continue;
 
-    const value = variable.valuesByMode[defaultModeId];
+    let value = variable.valuesByMode[defaultModeId];
     if (value === undefined) continue;
+
+    // Resolve variable aliases to their final value
+    if (isVariableAlias(value)) {
+      value = resolveAlias(value, variablesById, getDefaultModeId);
+      if (value === undefined) continue;
+    }
 
     const cssVar = figmaNameToCssVar(variable.name);
 

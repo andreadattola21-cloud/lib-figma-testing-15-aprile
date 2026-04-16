@@ -2,7 +2,7 @@ import type { Config } from "jest";
 
 const config: Config = {
   testEnvironment: "jsdom",
-  setupFilesAfterFramework: ["<rootDir>/jest.setup.ts"],
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
   transform: {
     "^.+\\.(ts|tsx)$": [
       "babel-jest",
@@ -19,7 +19,7 @@ const config: Config = {
     "\\.module\\.css$": "identity-obj-proxy",
     "\\.css$": "<rootDir>/../../jest/styleMock.js",
   },
-  testMatch: ["**/__tests__/**/*.tsx?", "**/*.test.tsx?"],
+  testMatch: ["**/__tests__/**/*.[jt]s?(x)", "**/?(*.)+(spec|test).[jt]s?(x)"],
   collectCoverageFrom: [
     "src/**/*.{ts,tsx}",
     "!src/**/*.types.ts",

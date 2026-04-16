@@ -1,5 +1,5 @@
 ---
-identifier: generate-component
+name: generate-component
 description: >
   Generate a new React component for the design system from a Figma
   selection. Creates the component file, CSS Module, types file, barrel
@@ -46,9 +46,14 @@ Full pipeline: Figma selection → production-ready React component in
 Create these files in order:
 
 **`[Name].types.ts`**
-- Define a TypeScript interface extending the relevant HTML element's attributes
+- Define a TypeScript interface extending the relevant HTML element's attributes:
+  - Buttons: `ButtonHTMLAttributes<HTMLButtonElement>`
+  - Divs/cards: `HTMLAttributes<HTMLDivElement>`
+  - Sections/nav/header/footer: `HTMLAttributes<HTMLElement>`
+- ALWAYS `import type { HTMLAttributes } from "react"` — never use `React.HTMLAttributes` without an explicit import
 - Use semantic prop names (`isSelected` not `active`, `isLoading` not `loading`)
 - Export every type used in props
+- If the component renders a native `<button>` internally (e.g. CTA), expose button attributes via a `buttonProps` prop or directly in the interface
 
 **`[Name].module.css`**
 - NEVER hardcode colors, spacing, or typography values
@@ -60,8 +65,9 @@ Create these files in order:
 - Named export only (no default export)
 - Destructure props with defaults matching Figma's default variant
 - Build `className` string from style modules, never use inline styles
-- Include `aria-*` attributes for accessibility
+- Include `aria-*` attributes for accessibility (see rules below)
 - No hardcoded strings, no hardcoded pixel values
+- Spread `...props` on the root element to forward native HTML attributes
 
 **`index.ts`**
 ```ts
@@ -105,10 +111,20 @@ npm run test --filter=@ds/components
 
 Fix any TypeScript or test errors before declaring done.
 
+## Accessibility (non-negotiable)
+- Use semantic HTML: `<nav>`, `<header>`, `<footer>`, `<section>`, `<main>`
+- Site navigation: each item in its own `<li>`, use `aria-current="page"` on active — NEVER `role="menubar"` for site navigation
+- Accordion: button trigger inside `<h3>`, `aria-expanded`, `aria-controls` → panel with `role="region"` + `aria-labelledby` → button. Generate IDs with `useId()`
+- Tabs: `role="tablist"`, `role="tab"` with `aria-selected` + `aria-controls`, `role="tabpanel"` with `aria-labelledby`, roving `tabIndex`, Arrow/Home/End keyboard support
+- All interactive elements need `:focus-visible` styles
+- Images need `alt`; decorative icons use `aria-hidden="true"`
+
 ## Rules (non-negotiable)
 - No hardcoded values — all values from `var(--ds-*)` tokens
 - No default exports
 - No `any` in TypeScript
 - No new icon packages — use existing icons in `src/icons/`
 - Never import `react` in files that only use JSX (React 17+ automatic runtime)
+- Always import types explicitly: `import type { HTMLAttributes } from "react"` — never bare `React.HTMLAttributes`
 - Every new primitive needs at minimum 4 unit tests
+- Tests MUST cover accessibility: ARIA attributes, keyboard interaction, landmark roles

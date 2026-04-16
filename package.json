@@ -9,6 +9,7 @@
     "dev": "turbo run dev",
     "test": "turbo run test",
     "lint": "turbo run lint",
+    "preview": "npm -w @ds/preview run dev",
     "storybook": "turbo run storybook --filter=@ds/storybook",
     "tokens:sync": "turbo run tokens:sync --filter=@ds/tokens",
     "code-connect:publish": "turbo run code-connect:publish --filter=@ds/code-connect",
