@@ -74,9 +74,15 @@ Create these files in order:
 **`[Name].module.css`**
 - NEVER hardcode colors, spacing, or typography values
 - ALWAYS use `var(--ds-*)` custom properties from `@ds/tokens`
+- **EXCEPTION — font-weight**: the `--ds-weight-*` tokens are broken (have `px` units). Use raw numeric values: `font-weight: 600` not `var(--ds-weight-semibold)`
 - Use BEM-like class naming: `.button`, `.size-sm`, `.variant-primary`
 - Only write CSS that directly implements the Figma design
 - Cross-check every CSS value against `get_metadata` dimensions
+- **Layout extraction**: read `get_design_context` output LITERALLY:
+  - If it says `flex flex-wrap` → add `flex-wrap: wrap`
+  - If it says `w-[262px]` → use `width: 262px`, not `flex: 1`
+  - If it says `pt-[32px] pb-[160px] px-[32px]` → use separate padding properties, not shorthand
+  - If it says `flex-[1_0_0]` → use `flex: 1 0 0` (not `flex: 1`)
 
 **`[Name].tsx`**
 - Named export only (no default export)
@@ -195,6 +201,32 @@ figma.connect(Component, url, {
 | Using instance node ID from URL | `get_context_for_code_connect` fails with instance IDs | Use `mainComponentNodeId` from `get_code_connect_suggestions` |
 | `.figma.ts` extension with JSX | TypeScript won't parse JSX in `.ts` files | Always use `.figma.tsx` |
 
+### Step 5b — Code Connect child components (MANDATORY for compositions)
+
+**Official Figma docs: "The nested instance also must be connected separately."**
+
+After creating the parent Code Connect, you MUST also connect every child library
+component. The parent mapping does NOT automatically cover children in Dev Mode.
+
+1. Call `get_code_connect_suggestions` on the parent node
+2. Review the returned list of unmapped children (each has `mainComponentNodeId`)
+3. For EACH unmapped child:
+   a. Call `get_context_for_code_connect` with the child's `mainComponentNodeId`
+   b. If the child is reusable, create a standalone React primitive for it
+   c. Create a `.figma.tsx` Code Connect file with the proper Figma property mappings
+   d. For very simple children (e.g. bold text), connect as a native element:
+      ```tsx
+      figma.connect("https://...?node-id=MAIN_ID", {
+        props: { text: figma.string("Text") },
+        example: ({ text }) => <strong>{text}</strong>,
+      });
+      ```
+4. Publish with `--skip-validation` (needed when some nodes are from external libraries)
+5. Verify: call `get_code_connect_suggestions` again — list should be empty
+
+**Do NOT skip this step.** A composition with unconnected children provides
+incomplete Code Connect coverage in Figma Dev Mode.
+
 ### Step 6 — Cross-check and verify
 
 1. **Cross-check CSS against metadata**: Compare every CSS value (gap, padding, max-width, border-radius) against `get_metadata` pixel dimensions
@@ -207,6 +239,12 @@ figma.connect(Component, url, {
    npx turbo run test
    ```
 4. Fix any TypeScript or test errors before declaring done.
+
+### Step 7 — Update preview app
+
+Add a showcase page in `packages/preview/src/pages/[Name]Showcase.tsx` and register it in `App.tsx`.
+
+**Icon and image assets**: When the Figma design contains icons or images, use the **asset URLs from `get_design_context`** (e.g. `const img = "https://www.figma.com/api/mcp/asset/..."`). Render them with `<img>` tags in the preview — do NOT recreate SVGs by hand, as they will look different from the Figma design.
 
 ## Accessibility (non-negotiable)
 - Use semantic HTML: `<nav>`, `<header>`, `<footer>`, `<section>`, `<main>`

@@ -70,3 +70,21 @@ onToggle={(i) => setOpenIndex(i)}
 - `.figma.ts` with JSX → Always `.figma.tsx`
 - Instance node ID → Use `mainComponentNodeId` from `get_code_connect_suggestions`
 - Template literal URL → Use string literal
+- Optional chaining on mapped props (`title?.text`) → Code Connect parser rejects it; use static fallbacks
+- Skipping child components → Every nested Figma library component needs its own `figma.connect()`
+
+## Child Component Nesting (MANDATORY)
+
+**"The nested instance also must be connected separately."** — Figma docs
+
+When connecting a composition, the parent's Code Connect does NOT cover children.
+Every Figma component visible in Dev Mode needs its own `figma.connect()` call.
+
+### Steps:
+1. After parent Code Connect, call `get_code_connect_suggestions` on the parent node
+2. For each unmapped child (`mainComponentNodeId`):
+   - Call `get_context_for_code_connect` to learn its Figma properties
+   - Create a React primitive if reusable, or connect as native element if simple
+   - Create a `.figma.tsx` with proper property mappings
+3. Publish all with `--skip-validation` (external library nodes may fail strict validation)
+4. Verify: `get_code_connect_suggestions` should return empty list

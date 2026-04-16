@@ -40,3 +40,11 @@ applyTo: ["packages/tokens/**", "packages/components/src/**/*.css"]
 - Always use `var(--ds-*)` — run `get_variable_defs` if unsure which token to use
 - Prefer primitive color tokens (`--ds-gray-*`) over semantic tokens when semantic tokens have `#NaN` values (known sync issue)
 - Components must not import from `@ds/tokens` directly — the CSS custom properties are loaded globally
+
+## ⚠️ Known Token Bugs
+- **`--ds-weight-*` tokens have invalid `px` units** (e.g. `--ds-weight-semibold: 600px`).
+  The `px` unit is invalid for `font-weight` and browsers silently ignore it, falling back to `normal` (400).
+  **Workaround**: use raw numeric values instead of token vars for `font-weight`:
+  - `font-weight: 400` instead of `var(--ds-weight-regular)`
+  - `font-weight: 600` instead of `var(--ds-weight-semibold)`
+  - `font-weight: 700` instead of `var(--ds-weight-bold)`

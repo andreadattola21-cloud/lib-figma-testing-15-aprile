@@ -194,3 +194,30 @@ Does the React component accept ReactNode children?
 | Instance node ID from URL | `get_context_for_code_connect` fails | `mainComponentNodeId` from suggestions |
 | `.figma.ts` extension with JSX | TS won't parse JSX in `.ts` | Always `.figma.tsx` |
 | Hardcoded `fileKey` from env var | Code Connect needs literal URLs | Use full string literal URL |
+| Skipping child components | Children show "No code connected" in Dev Mode | Connect each child separately |
+| `title?.text` in example JSX | Code Connect parser rejects optional chaining on mapped props | Use static fallback string or simpler prop mapping |
+
+## 8. Child component nesting (MANDATORY)
+
+**Official Figma docs: "The nested instance also must be connected separately."**
+
+When connecting a composition, the parent's Code Connect does NOT cover children.
+Every Figma library component visible in Dev Mode needs its own `figma.connect()`.
+
+### Workflow:
+1. After creating the parent's Code Connect, call `get_code_connect_suggestions` on the parent
+2. The response lists all unmapped child components with `mainComponentNodeId`
+3. For each child:
+   a. Call `get_context_for_code_connect` to understand its Figma properties
+   b. Create a React primitive if the child is reusable (e.g. TextLinkList)
+   c. Create a `.figma.tsx` with proper property mappings
+   d. For simple children (bold text, single link), connect as native elements
+4. Publish with `--skip-validation` (external library nodes may fail validation)
+5. Verify: call `get_code_connect_suggestions` again — list should be empty
+
+### Available property mappers for child Code Connect:
+- `figma.string("Text")` — text content
+- `figma.enum("Density", { Default: "default", Tight: "compact" })` — variants
+- `figma.boolean("Has Title")` — boolean toggles
+- `figma.children("*")` — child instances (requires those children to also be connected)
+- `figma.nestedProps("LayerName", { ... })` — access child layer props from parent

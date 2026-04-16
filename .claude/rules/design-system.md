@@ -41,12 +41,18 @@ Never skip `get_metadata`. Never guess pixel values.
 | Border radius          | `--ds-radius-*`           | `--ds-radius-200` = 8px |
 | Typography size        | `--ds-scale-*`            | `--ds-scale-03` = 16px |
 | Font family            | `--ds-family-*`           | `--ds-family-sans` |
-| Font weight            | `--ds-weight-*`           | `--ds-weight-bold` |
+| Font weight            | `--ds-weight-*`           | ⚠️ See §3b — use raw numeric values |
 | Stroke                 | `--ds-stroke-*`           | `--ds-stroke-border` = 1px |
 | Shadow / depth         | `--ds-depth-*`            | `--ds-depth-200` |
 
 Run `get_variable_defs` if unsure which token to use — never guess values.
 If a semantic token resolves to `#NaN`, use the primitive color token instead.
+
+## 3b. Font-weight — Known `--ds-weight-*` Token Bug
+
+The `--ds-weight-*` tokens in `tokens.css` include invalid `px` units (e.g. `600px`).
+Browsers silently ignore `font-weight: 600px` and fall back to `normal` (400).
+**Always use raw numeric font-weight values**: `font-weight: 600`, NOT `var(--ds-weight-semibold)`.
 
 ## 4. Component Conventions
 
@@ -82,6 +88,19 @@ NEVER use `props: {}` (empty). Either map real properties or omit `props` entire
 `figma.children()` returns `ReactNode[]`. ONLY use it when the React component
 prop accepts `ReactNode` or `ReactNode[]`. If the prop accepts a data array
 (e.g. `FooterLinkColumn[]`, `AccordionItemData[]`), use a static example instead.
+
+### Child component nesting (MANDATORY)
+**"The nested instance also must be connected separately."** — Figma docs
+
+When connecting a composition, the parent's Code Connect does NOT cover children.
+Every Figma component visible in Dev Mode needs its own `figma.connect()` call.
+
+Steps:
+1. After creating parent Code Connect, call `get_code_connect_suggestions` on parent
+2. For each unmapped child: create a React primitive if reusable, then a `.figma.tsx`
+3. Simple children (bold text, single link) can be connected as native elements
+4. Publish with `--skip-validation` (external library nodes may fail strict validation)
+5. Verify: `get_code_connect_suggestions` should return empty list
 
 ## 6. File Placement
 

@@ -20,6 +20,21 @@ followed every time components are generated from Figma.
 - Don't invent breakpoints — Figma designs are static. Only add responsive
   behavior where truly needed, and document the reasoning.
 
+## 2b. Layout values — extract literally from `get_design_context` (CRITICAL)
+
+- **`flex-wrap`**: if Figma says `flex flex-wrap`, you MUST add `flex-wrap: wrap` — never omit it
+- **Fixed widths**: if Figma specifies `w-[262px]` on a child, use `width: 262px` — not `flex: 1`
+- **`flex: 1 0 0` vs `flex: 1`**: read the EXACT shorthand. `flex-[1_0_0]` means `flex: 1 0 0` (shrink=0), NOT `flex: 1`
+- **min-width**: if Figma says `min-w-[240px]`, set `min-width: 240px`
+- **Gap on the slot/grid container**: read the gap from the direct parent container, not the section wrapper
+- **Padding asymmetry**: Figma may use `pt-[32px] pb-[160px] px-[32px]` — do NOT simplify to `padding: 32px`
+
+## 2c. Font-weight — known `--ds-weight-*` token bug
+
+The `--ds-weight-*` tokens in `tokens.css` include invalid `px` units (e.g. `600px`).
+Browsers silently ignore `font-weight: 600px` and fall back to `normal` (400).
+**Always use raw numeric font-weight values**: `font-weight: 600`, NOT `var(--ds-weight-semibold)`.
+
 ## 3. Code Connect — Extension and URL rules
 
 - Files containing JSX must use `.figma.tsx` extension, not `.ts`.
@@ -102,3 +117,26 @@ Either map real Figma properties or omit the `props` block entirely.
 9. Create Code Connect (`.figma.tsx`) following data-driven vs children rules
 10. Typecheck: `npx tsc --noEmit` in code-connect package
 11. Publish and verify success
+
+## 9. Child component Code Connect — MANDATORY nesting rule
+
+**"The nested instance also must be connected separately."** — Figma docs
+
+When connecting a composition, the parent's Code Connect does NOT cover children.
+Every Figma component visible in Dev Mode needs its own `figma.connect()` call.
+
+### Workflow:
+1. After parent Code Connect, call `get_code_connect_suggestions` on parent node
+2. The response lists all unmapped children with `mainComponentNodeId`
+3. For each child:
+   a. Call `get_context_for_code_connect` to understand its Figma properties
+   b. Create a React primitive if reusable, or connect as native element if simple
+   c. Create a `.figma.tsx` with proper property mappings
+4. Publish with `--skip-validation` (external library nodes may fail validation)
+5. Verify: call `get_code_connect_suggestions` again — list should be empty
+
+### Key rules:
+- `figma.children("*")` in the parent references child instances — those children MUST have their own Code Connect
+- `figma.instance("PropName")` also requires the swapped component to be connected
+- NEVER leave child components unmapped
+- Optional chaining on mapped props (e.g. `title?.text`) breaks the Code Connect parser — use static fallbacks
