@@ -1,0 +1,114 @@
+/* ─── Base ────────────────────────────────────────────────── */
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  border-top: var(--ds-stroke-border) solid var(--ds-border-default-default);
+  padding-top: var(--ds-space-800);
+  padding-left: var(--ds-space-800);
+  padding-right: var(--ds-space-800);
+  padding-bottom: var(--ds-space-4000);
+  gap: var(--ds-space-400);
+  box-sizing: border-box;
+  background-color: var(--ds-background-default-default);
+  color: var(--ds-text-default-default);
+  font-family: var(--ds-family-sans), sans-serif;
+}
+
+/* ─── Branding ────────────────────────────────────────────── */
+.branding {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-600);
+  align-items: flex-start;
+  width: 262px;
+  min-width: 240px;
+  flex-shrink: 0;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  color: var(--ds-text-default-default);
+}
+
+/* ─── Social Links ────────────────────────────────────────── */
+.socialLinks {
+  display: flex;
+  gap: var(--ds-space-400);
+  align-items: center;
+}
+
+.socialLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ds-text-default-default);
+  text-decoration: none;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.socialLink:focus-visible {
+  outline: 2px solid var(--ds-blue-500);
+  outline-offset: 2px;
+  border-radius: var(--ds-radius-100);
+}
+
+/* ─── Columns ─────────────────────────────────────────────── */
+.columns {
+  display: flex;
+  gap: var(--ds-space-400);
+  align-items: flex-start;
+  flex-shrink: 0;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-300);
+  width: 262px;
+  flex-shrink: 0;
+  align-items: flex-start;
+}
+
+.columnTitle {
+  font-size: var(--ds-scale-03);
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0;
+  padding-bottom: var(--ds-space-400);
+  width: 100%;
+}
+
+.columnLinks {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-300);
+}
+
+.columnLinkItem {
+  margin: 0;
+}
+
+.columnLink {
+  font-size: var(--ds-scale-03);
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--ds-text-default-default);
+  text-decoration: none;
+}
+
+.columnLink:hover {
+  text-decoration: underline;
+}
+
+.columnLink:focus-visible {
+  outline: 2px solid var(--ds-blue-500);
+  outline-offset: 2px;
+  border-radius: var(--ds-radius-100);
+}

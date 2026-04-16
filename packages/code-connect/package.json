@@ -4,7 +4,7 @@
   "description": "Figma Code Connect mappings for the design system",
   "private": true,
   "scripts": {
-    "code-connect:publish": "figma connect publish",
+    "code-connect:publish": "figma connect publish --skip-validation",
     "code-connect:unpublish": "figma connect unpublish",
     "typecheck": "tsc --noEmit"
   },

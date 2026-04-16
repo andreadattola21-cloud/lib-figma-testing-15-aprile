@@ -37,8 +37,10 @@ When designing the types, determine how children are modeled:
 | Color (semantic)  | `--ds-text-*`, `--ds-background-*`, `--ds-border-*` |
 | Spacing           | `--ds-space-*`      |
 | Border radius     | `--ds-radius-*`     |
-| Typography        | `--ds-scale-*` (size), `--ds-family-*` (font), `--ds-weight-*` |
+| Typography        | `--ds-scale-*` (size), `--ds-family-*` (font) |
 | Stroke            | `--ds-stroke-*`     |
+
+> ⚠️ **Do NOT use `--ds-weight-*` tokens for `font-weight`** — they contain invalid `px` units and are silently ignored by browsers. Use raw values: `font-weight: 400`, `font-weight: 600`, `font-weight: 700`.
 
 ## File Checklist
 Every component needs: `.types.ts`, `.module.css`, `.tsx`, `index.ts`, `.test.tsx`

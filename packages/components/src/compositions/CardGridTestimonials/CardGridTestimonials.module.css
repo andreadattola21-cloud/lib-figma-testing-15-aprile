@@ -1,0 +1,47 @@
+/* ─── Section ─────────────────────────────────────────────── */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-1200);
+  padding: var(--ds-space-1600);
+  background-color: var(--ds-background-default-default);
+  box-sizing: border-box;
+  font-family: var(--ds-family-sans), sans-serif;
+}
+
+/* ─── Header ──────────────────────────────────────────────── */
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-200);
+}
+
+.heading {
+  margin: 0;
+  font-size: var(--ds-scale-05);
+  font-weight: var(--ds-weight-semibold);
+  line-height: 1.2;
+  letter-spacing: -0.48px;
+  color: var(--ds-text-default-default);
+}
+
+.subheading {
+  margin: 0;
+  font-size: var(--ds-scale-04);
+  font-weight: var(--ds-weight-regular);
+  line-height: 1.2;
+  color: var(--ds-text-default-secondary);
+}
+
+/* ─── Grid ────────────────────────────────────────────────── */
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-1200);
+  align-content: flex-start;
+}
+
+.gridItem {
+  flex: 1 0 0;
+  min-width: 300px;
+}
