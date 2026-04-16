@@ -1,5 +1,5 @@
 ---
-description: "Use when generating, creating, or editing React components for the design system. Covers accessibility, typing, CSS tokens, and component structure."
+description: "Use when generating, creating, or editing React components for the design system. Covers accessibility, typing, CSS tokens, component structure, and Code Connect integration."
 applyTo: "packages/components/src/**"
 ---
 # Component Development Rules
@@ -13,6 +13,14 @@ applyTo: "packages/components/src/**"
 - Export every type used in props from the component's barrel `index.ts`
 - If a component renders a native `<button>`, expose `onClick` and other button attributes to consumers
 
+## Prop Data Model (important for Code Connect)
+When designing the types, determine how children are modeled:
+- **Data arrays** (`items: ItemData[]`, `columns: ColumnData[]`): for structured, typed content
+  - Code Connect will use static examples (no `figma.children()`)
+- **ReactNode children** (`children: ReactNode`): for compositional patterns
+  - Code Connect will use `figma.children("*")`
+- NEVER mix both: a component either accepts data arrays OR ReactNode children
+
 ## Accessibility (WCAG 2.1 AA)
 - Use semantic HTML elements (`<nav>`, `<header>`, `<footer>`, `<section>`, `<main>`)
 - Navigation lists: each item in its own `<li>`, no `role="menubar"` for site nav — use `aria-current="page"` on active item
@@ -25,12 +33,21 @@ applyTo: "packages/components/src/**"
 ## CSS Tokens
 | Figma variable     | CSS prefix          |
 |-------------------|---------------------|
-| Color             | `--ds-color-*` or `--ds-gray-*`, `--ds-blue-*`, etc. |
+| Color (primitives) | `--ds-gray-*`, `--ds-blue-*`, `--ds-red-*` |
+| Color (semantic)  | `--ds-text-*`, `--ds-background-*`, `--ds-border-*` |
 | Spacing           | `--ds-space-*`      |
 | Border radius     | `--ds-radius-*`     |
-| Typography        | `--ds-scale-*` (size), `--ds-family-*` (font) |
+| Typography        | `--ds-scale-*` (size), `--ds-family-*` (font), `--ds-weight-*` |
 | Stroke            | `--ds-stroke-*`     |
 
 ## File Checklist
 Every component needs: `.types.ts`, `.module.css`, `.tsx`, `index.ts`, `.test.tsx`
 Minimum 4 tests: renders, variants, interaction, accessibility
+
+## Mandatory MCP Flow
+When implementing from Figma:
+1. `get_design_context` → layout structure, flex values
+2. `get_metadata` → exact pixel dimensions
+3. `get_variable_defs` → map to `--ds-*` tokens
+4. `get_code_connect_map` → check existing mappings
+5. Cross-check every CSS value against metadata

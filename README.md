@@ -9,8 +9,9 @@ with Figma via MCP and Code Connect.
 |---|---|
 | `@ds/tokens` | Design tokens (CSS custom properties) synced from Figma variables |
 | `@ds/components` | React component library (primitives, compositions, layout) |
-| `@ds/code-connect` | Figma Code Connect mappings (`.figma.ts` files) |
+| `@ds/code-connect` | Figma Code Connect mappings (`.figma.tsx` files) |
 | `@ds/storybook` | Storybook documentation and visual testing |
+| `@ds/preview` | Preview app for testing component integration |
 
 ## Quick start
 
@@ -18,46 +19,46 @@ with Figma via MCP and Code Connect.
 # Install dependencies
 npm install
 
+# Copy environment variables
+cp .env.example .env
+# Edit .env with your Figma PAT and file key
+
 # Build all packages
 npm run build
 
-# Start Storybook
-npm run storybook
-
 # Run all tests
 npm run test
+
+# Start preview app
+npm run preview
 ```
 
 ## Prerequisites
 
 - Node.js >= 20
+- npm >= 10
 - Figma Organization or Enterprise plan (required for Code Connect)
-- [Figma desktop app](https://www.figma.com/downloads/) (for MCP server)
-- Claude Code with Figma MCP configured (see below)
+- [VS Code](https://code.visualstudio.com/) with GitHub Copilot (for MCP integration)
 
 ---
 
 ## Figma MCP Setup
 
-### 1. Configure the MCP server in Claude Code
+### VS Code (Recommended)
 
-Add to your Claude Code settings (`.claude/settings.json`):
+The repo includes `.vscode/mcp.json` pre-configured for the Figma Remote MCP server.
+When you open the project in VS Code, it will auto-detect the MCP configuration.
 
-```json
-{
-  "mcpServers": {
-    "figma": {
-      "command": "npx",
-      "args": ["-y", "figma-mcp-server"],
-      "env": {
-        "FIGMA_ACCESS_TOKEN": "<your-personal-access-token>"
-      }
-    }
-  }
-}
-```
+You need to authenticate via your Figma Personal Access Token:
 
-Or use the **Figma Remote MCP** (no local install):
+1. Go to **Figma → Account Settings → Personal Access Tokens**
+2. Create a token with `file:read` and `code_connect:write` scopes
+3. VS Code will prompt for authentication when the MCP server is first used
+
+### Claude Code / Cursor / Other MCP Clients
+
+Add to your MCP client config:
+
 ```json
 {
   "mcpServers": {
@@ -71,13 +72,10 @@ Or use the **Figma Remote MCP** (no local install):
 }
 ```
 
-Get your token: Figma → Account Settings → Personal Access Tokens.
-
-### 2. Set environment variables
+### Environment Variables
 
 ```bash
 cp .env.example .env
-# Edit .env with your values
 ```
 
 ```env
@@ -85,14 +83,8 @@ FIGMA_ACCESS_TOKEN=your_figma_pat
 FIGMA_FILE_KEY=your_figma_file_key   # from the file URL: /design/FILE_KEY/...
 ```
 
-### 3. Load custom MCP rules
-
-When starting a new Claude Code session, run:
-```
-/load .claude/rules/design-system.md
-```
-
-This loads the team conventions so every code generation session is consistent.
+> ⚠️ **Security**: Never commit `.env` files. The `.gitignore` blocks them,
+> but always verify with `git status` before committing.
 
 ---
 
@@ -110,12 +102,14 @@ This calls the Figma Variables API and writes CSS custom properties to
 ### B. Generate a new component
 
 1. Open the Figma file and select the component frame
-2. In Claude Code: `use the generate-component skill`
+2. In your AI assistant: `use the generate-component skill`
 3. The AI will:
    - Read the design context via MCP (`get_design_context`)
+   - Extract dimensions via `get_metadata`
+   - Map variables via `get_variable_defs`
    - Check existing Code Connect mappings (`get_code_connect_map`)
    - Generate the component, CSS Module, types, test, and story
-   - Create the `.figma.ts` Code Connect file
+   - Create the `.figma.tsx` Code Connect file
 
 ### C. Publish Code Connect
 
@@ -151,36 +145,83 @@ packages/components/src/
 │       ├── Button.types.ts
 │       ├── Button.test.tsx
 │       └── index.ts
-├── compositions/       # Molecules: Card, FormField, Modal, DataTable…
+├── compositions/       # Molecules: Card, Header, Footer, HeroBasic…
 ├── layout/             # Layout wrappers: Flex, Grid, Stack, Section
 │   └── Flex/
 └── index.ts            # Named exports only (enables tree-shaking)
 ```
 
-### Adding a new component
+### File checklist for every component
 
-Follow the `generate-component` skill or do it manually:
+| File | Purpose |
+|---|---|
+| `Name.types.ts` | Props interface (extends HTML attributes) |
+| `Name.module.css` | Styles using `var(--ds-*)` tokens only |
+| `Name.tsx` | Component implementation |
+| `Name.test.tsx` | Minimum 4 tests (render, variants, interaction, a11y) |
+| `index.ts` | Named re-export |
 
-1. Create folder in the right category (`primitives/`, `compositions/`, `layout/`)
-2. Create `Name.types.ts`, `Name.module.css`, `Name.tsx`, `Name.test.tsx`, `index.ts`
-3. Add named export to `src/index.ts`
-4. Add story in `packages/storybook/stories/Name.stories.tsx`
-5. Create `packages/code-connect/src/Name.figma.ts`
+### Rules
 
-Rules:
 - **No hardcoded values** — all from `var(--ds-*)` tokens
-- **No default exports**
+- **No default exports** — named exports only
 - **No `any`** in TypeScript
+- **Always spread `...props`** on root element
+- **Props extend HTML attributes** (e.g. `ButtonHTMLAttributes<HTMLButtonElement>`)
+
+---
+
+## Build Output
+
+The components package produces:
+
+| Output | Format | Purpose |
+|---|---|---|
+| `dist/index.esm.js` | ESM | Tree-shakeable for bundlers |
+| `dist/index.js` | CJS | Node.js / SSR |
+| `dist/index.css` | CSS | Extracted CSS Modules |
+| `dist/index.d.ts` | TypeScript | Type declarations |
+
+### Tree-shaking
+
+- `sideEffects: false` in `package.json`
+- Named exports only from barrel `index.ts`
+- React is a peer dependency (never bundled)
 
 ---
 
 ## MFE Integration
 
-See [`docs/mfe-integration.md`](docs/mfe-integration.md) for:
-- npm package consumption (recommended)
-- Module Federation runtime sharing
-- Design token loading strategy
-- Versioning approach
+### Install as npm package
+
+```bash
+npm install @ds/components @ds/tokens
+```
+
+### Import components
+
+```tsx
+import { Button, Header, Flex } from "@ds/components";
+import "@ds/tokens/dist/tokens.css"; // Load design tokens globally
+import "@ds/components/dist/index.css"; // Load component styles
+```
+
+### Module Federation (Runtime)
+
+For MFE architectures using Module Federation (Rsbuild / Webpack 5):
+
+```js
+// host webpack.config.js
+new ModuleFederationPlugin({
+  remotes: {
+    designSystem: "ds@https://cdn.example.com/ds/remoteEntry.js",
+  },
+  shared: {
+    react: { singleton: true },
+    "react-dom": { singleton: true },
+  },
+});
+```
 
 ---
 
@@ -192,22 +233,52 @@ See [`docs/mfe-integration.md`](docs/mfe-integration.md) for:
 | `npm run dev` | Watch mode for all packages |
 | `npm run test` | Run all unit tests |
 | `npm run typecheck` | TypeScript check across all packages |
+| `npm run preview` | Start preview app dev server |
 | `npm run storybook` | Start Storybook dev server |
 | `npm run tokens:sync` | Sync tokens from Figma |
 | `npm run code-connect:publish` | Publish Code Connect mappings to Figma |
-| `npm run code-connect:unpublish` | Remove Code Connect mappings |
 
 ---
 
-## Claude Code skills
+## Code Connect
 
-| Skill | Trigger |
-|---|---|
-| `generate-component` | "Generate the [X] component from Figma" |
-| `figma-code-connect` | "Connect the [X] Figma component to code" |
+Code Connect files live in `packages/code-connect/src/` and map Figma components
+to their React implementations. They use the `.figma.tsx` extension.
 
-Skills are in `.claude/skills/`. Each SKILL.md contains step-by-step
-instructions the AI follows automatically when the skill is invoked.
+### Key rules
+
+- URLs must be **string literals** (template literals are rejected by the parser)
+- Use `figma.string("PropName")` to map Figma string properties
+- Use `figma.enum("PropName", { ... })` for variant mappings
+- Use `figma.boolean("PropName")` for boolean toggles
+- For data-driven compositions (arrays of objects), use **static examples** — don't use `figma.children()` unless the component prop accepts `ReactNode`
+- Node IDs must come from `get_code_connect_suggestions` (use `mainComponentNodeId`)
+
+### Publishing
+
+```bash
+# Set your token
+export FIGMA_ACCESS_TOKEN=your_pat
+
+# Publish
+npm run code-connect:publish
+
+# Unpublish (removes from Figma)
+npm run code-connect:unpublish
+```
+
+---
+
+## AI Skills
+
+| Skill | Trigger | Client |
+|---|---|---|
+| `generate-component` | "Generate the [X] component from Figma" | Claude Code, VS Code Copilot |
+| `figma-code-connect` | "Connect the [X] Figma component to code" | Claude Code, VS Code Copilot |
+
+Skills are defined in:
+- `.claude/skills/` — Claude Code
+- `.github/instructions/` — VS Code Copilot
 
 ---
 
@@ -217,12 +288,12 @@ instructions the AI follows automatically when the skill is invoked.
 --ds-{category}-{subcategory}-{variant}
 
 Examples:
-  --ds-color-text-default
-  --ds-color-action-primary-hover
-  --ds-space-4
-  --ds-radius-md
-  --ds-font-size-lg
-  --ds-shadow-md
+  --ds-text-default-default
+  --ds-background-default-default
+  --ds-space-400                    # 16px
+  --ds-radius-200                   # 8px
+  --ds-scale-03                     # 16px font size
+  --ds-weight-bold
 ```
 
 All tokens are defined in `packages/tokens/src/tokens.css`.

@@ -20,14 +20,26 @@ Full pipeline: Figma selection → production-ready React component in
 
 ## Instructions
 
-### Step 1 — Understand the design
+### Step 1 — Understand the design (mandatory MCP calls)
 
-1. Call `get_design_context` on the selected Figma frame.
-   - This returns React + CSS structure — read it to understand the layout,
-     not to copy it verbatim
-2. Call `get_screenshot` to capture the visual reference.
-3. Call `get_variable_defs` to list all Figma variables used (tokens).
-4. Call `get_code_connect_map` to check if any child components already
+ALL of these MCP calls are **mandatory**. Never skip any.
+
+1. **`get_design_context`** on the selected Figma frame.
+   - Returns reference code (Tailwind-style) — read it to understand layout,
+     flex values, spacing, and token usage. Do NOT copy verbatim.
+   - Extract exact flex properties: `flex-wrap`, `flex: 1 0 0`, `min-width`, `gap`.
+   - Do NOT substitute your own values — use exactly what Figma specifies.
+
+2. **`get_metadata`** on the same node.
+   - Returns exact pixel dimensions (width, height, x, y) for every child node.
+   - Use these to set `max-width`, verify gap values, and confirm layout structure.
+   - Do NOT assume `width: 100%` — check the actual frame width.
+
+3. **`get_variable_defs`** to list all Figma variables used (tokens).
+   - Map every Figma variable to its `--ds-*` CSS custom property.
+   - If a variable resolves to `#NaN`, use the primitive color token instead.
+
+4. **`get_code_connect_map`** to check if any child components already
    have Code Connect mappings — reuse them, do NOT recreate them.
 
 ### Step 2 — Classify the component
@@ -36,7 +48,7 @@ Full pipeline: Figma selection → production-ready React component in
   Checkbox, Tag, Avatar, Spinner…)
   → place in `packages/components/src/primitives/[Name]/`
 - **Composition** if it combines multiple primitives (Card, Modal, FormField,
-  PageHeader, DataTable…)
+  PageHeader, DataTable, Header, Footer, HeroBasic…)
   → place in `packages/components/src/compositions/[Name]/`
 - **Layout** if it is a pure layout wrapper (Flex, Grid, Stack, Section)
   → place in `packages/components/src/layout/[Name]/`
@@ -54,17 +66,22 @@ Create these files in order:
 - Use semantic prop names (`isSelected` not `active`, `isLoading` not `loading`)
 - Export every type used in props
 - If the component renders a native `<button>` internally (e.g. CTA), expose button attributes via a `buttonProps` prop or directly in the interface
+- Determine prop data model from the Figma structure:
+  - If Figma uses "Slot" layers with repeated child instances → define a typed array prop (e.g. `items: ItemData[]`, `columns: ColumnData[]`)
+  - If Figma uses direct children with no defined structure → use `children: ReactNode`
+  - NEVER mix the two: a component either accepts data arrays OR ReactNode children
 
 **`[Name].module.css`**
 - NEVER hardcode colors, spacing, or typography values
 - ALWAYS use `var(--ds-*)` custom properties from `@ds/tokens`
 - Use BEM-like class naming: `.button`, `.size-sm`, `.variant-primary`
 - Only write CSS that directly implements the Figma design
+- Cross-check every CSS value against `get_metadata` dimensions
 
 **`[Name].tsx`**
 - Named export only (no default export)
 - Destructure props with defaults matching Figma's default variant
-- Build `className` string from style modules, never use inline styles
+- Build `className` string from style modules, never use inline styles for design values
 - Include `aria-*` attributes for accessibility (see rules below)
 - No hardcoded strings, no hardcoded pixel values
 - Spread `...props` on the root element to forward native HTML attributes
@@ -81,12 +98,7 @@ export type { ComponentNameProps } from "./ComponentName.types";
 - Test: interactive events (click, change, keydown)
 - Test: accessibility (disabled state, aria attributes)
 - Use `@testing-library/react` and `userEvent`
-
-**`[Name].stories.tsx`** in `packages/storybook/stories/`
-- Title: `"Primitives/Name"` or `"Compositions/Name"`
-- Args matching every prop in the types file
-- Stories for each variant, size, state
-- An `AllVariants` story
+- Minimum 4 tests per component
 
 ### Step 4 — Update the library entry point
 
@@ -96,20 +108,105 @@ export { ComponentName } from "./primitives/ComponentName";
 export type { ComponentNameProps } from "./primitives/ComponentName";
 ```
 
-### Step 5 — Create Code Connect
+### Step 5 — Create Code Connect (CRITICAL — read carefully)
 
-Follow the **figma-code-connect** skill to create
-`packages/code-connect/src/[Name].figma.ts`.
+Create `packages/code-connect/src/[Name].figma.tsx` (MUST be `.figma.tsx`, NEVER `.figma.ts`).
 
-### Step 6 — Verify
+**Get the correct node ID:**
+1. Call `get_code_connect_suggestions` with the Figma URL
+2. Use the `mainComponentNodeId` from the response — NEVER use instance node IDs from the URL
 
-Run:
-```bash
-npm run typecheck --filter=@ds/components
-npm run test --filter=@ds/components
+**Determine the mapping strategy based on component type:**
+
+**A. Primitive with Figma component properties** (Button, Badge, Input…):
+```tsx
+import figma from "@figma/code-connect";
+import { Button } from "@ds/components";
+
+figma.connect(
+  Button,
+  "https://www.figma.com/design/FILE_KEY?node-id=MAIN_COMPONENT_NODE_ID",
+  {
+    props: {
+      label: figma.string("Label"),
+      variant: figma.enum("Variant", {
+        Primary: "primary",
+        Secondary: "secondary",
+      }),
+      disabled: figma.boolean("Disabled"),
+    },
+    example: ({ label, variant, disabled }) => (
+      <Button variant={variant} disabled={disabled}>
+        {label}
+      </Button>
+    ),
+  }
+);
 ```
 
-Fix any TypeScript or test errors before declaring done.
+**B. Data-driven composition** (Footer, Header, CardGrid…):
+Components that accept ARRAYS of data objects (not ReactNode children):
+```tsx
+import figma from "@figma/code-connect";
+import { Footer } from "@ds/components";
+
+figma.connect(
+  Footer,
+  "https://www.figma.com/design/FILE_KEY?node-id=MAIN_COMPONENT_NODE_ID",
+  {
+    // NO props mapping — use a complete static example
+    example: () => (
+      <Footer
+        logoSrc="/logo.svg"
+        columns={[
+          {
+            title: "Product",
+            links: [
+              { label: "Features", href: "/features" },
+              { label: "Pricing", href: "/pricing" },
+            ],
+          },
+        ]}
+      />
+    ),
+  }
+);
+```
+
+**C. Composition with ReactNode children** (PageLayout, CardGrid with slot children…):
+Components whose props accept `ReactNode` children:
+```tsx
+figma.connect(Component, url, {
+  props: {
+    children: figma.children("*"),
+  },
+  example: ({ children }) => <Component>{children}</Component>,
+});
+```
+
+#### ⛔ Code Connect ANTI-PATTERNS (never do these):
+
+| Anti-pattern | Why it fails | Correct approach |
+|---|---|---|
+| `figma.children("Slot")` on a data-driven component | `figma.children()` returns `ReactNode[]` but the prop expects `DataObject[]` | Use static example with real data |
+| `props: {}` (empty) | Provides no value to developers viewing in Figma | Either map real properties or omit `props` entirely |
+| Referencing undefined variables (`navigate`, `setIndex`) | TypeScript compilation error in typecheck | Use `() => {}` for all callback props |
+| Using template literals for Figma URL | Code Connect parser rejects template literals | Use string literal: `"https://..."` |
+| Using instance node ID from URL | `get_context_for_code_connect` fails with instance IDs | Use `mainComponentNodeId` from `get_code_connect_suggestions` |
+| `.figma.ts` extension with JSX | TypeScript won't parse JSX in `.ts` files | Always use `.figma.tsx` |
+
+### Step 6 — Cross-check and verify
+
+1. **Cross-check CSS against metadata**: Compare every CSS value (gap, padding, max-width, border-radius) against `get_metadata` pixel dimensions
+2. Run typecheck:
+   ```bash
+   npx turbo run typecheck
+   ```
+3. Run tests:
+   ```bash
+   npx turbo run test
+   ```
+4. Fix any TypeScript or test errors before declaring done.
 
 ## Accessibility (non-negotiable)
 - Use semantic HTML: `<nav>`, `<header>`, `<footer>`, `<section>`, `<main>`

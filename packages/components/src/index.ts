@@ -15,6 +15,16 @@ export type { ButtonProps, ButtonVariant, ButtonSize } from "./primitives/Button
 
 // ─── Layout ─────────────────────────────────────────────────
 export { Flex } from "./layout/Flex";
+export type {
+  FlexProps,
+  FlexDirection,
+  FlexAlign,
+  FlexJustify,
+  FlexWrap,
+} from "./layout/Flex";
 
 // ─── Compositions ────────────────────────────────────────────
-// (added as components are built from Figma)
+// Add exports here as components are generated from Figma.
+// Example:
+//   export { Header } from "./compositions/Header";
+//   export type { HeaderProps } from "./compositions/Header";

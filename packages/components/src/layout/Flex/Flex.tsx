@@ -1,20 +1,23 @@
-import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
+import type { CSSProperties } from "react";
+import type { FlexProps, FlexAlign, FlexJustify } from "./Flex.types";
 import styles from "./Flex.module.css";
 
-type FlexDirection = "row" | "row-reverse" | "column" | "column-reverse";
-type FlexAlign = "start" | "center" | "end" | "stretch" | "baseline";
-type FlexJustify = "start" | "center" | "end" | "between" | "around" | "evenly";
-type FlexWrap = "nowrap" | "wrap" | "wrap-reverse";
+const justifyMap: Record<FlexJustify, string> = {
+  start: "flex-start",
+  center: "center",
+  end: "flex-end",
+  between: "space-between",
+  around: "space-around",
+  evenly: "space-evenly",
+};
 
-interface FlexProps extends HTMLAttributes<HTMLDivElement> {
-  children: ReactNode;
-  direction?: FlexDirection;
-  align?: FlexAlign;
-  justify?: FlexJustify;
-  wrap?: FlexWrap;
-  gap?: number;
-  inline?: boolean;
-}
+const alignMap: Record<FlexAlign, string> = {
+  start: "flex-start",
+  center: "center",
+  end: "flex-end",
+  stretch: "stretch",
+  baseline: "baseline",
+};
 
 /**
  * Flex — layout primitive that wraps CSS flexbox.
@@ -32,23 +35,6 @@ export function Flex({
   className,
   ...props
 }: FlexProps) {
-  const justifyMap: Record<FlexJustify, string> = {
-    start: "flex-start",
-    center: "center",
-    end: "flex-end",
-    between: "space-between",
-    around: "space-around",
-    evenly: "space-evenly",
-  };
-
-  const alignMap: Record<FlexAlign, string> = {
-    start: "flex-start",
-    center: "center",
-    end: "flex-end",
-    stretch: "stretch",
-    baseline: "baseline",
-  };
-
   const inlineStyle: CSSProperties = {
     "--flex-direction": direction,
     "--flex-align": alignMap[align],

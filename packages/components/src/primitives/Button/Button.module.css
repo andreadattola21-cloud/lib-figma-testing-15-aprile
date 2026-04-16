@@ -3,91 +3,91 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--ds-space-2);
-  border: 1px solid transparent;
-  border-radius: var(--ds-radius-md);
-  font-family: var(--ds-font-family-sans);
-  font-weight: var(--ds-font-weight-medium);
-  line-height: var(--ds-line-height-tight);
+  gap: var(--ds-space-200);
+  border: var(--ds-stroke-border) solid transparent;
+  border-radius: var(--ds-radius-200);
+  font-family: var(--ds-family-sans), sans-serif;
+  font-weight: var(--ds-weight-medium);
+  line-height: 1.4;
   cursor: pointer;
   transition:
-    background-color var(--ds-transition-fast),
-    border-color var(--ds-transition-fast),
-    color var(--ds-transition-fast),
-    box-shadow var(--ds-transition-fast);
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
   text-decoration: none;
   white-space: nowrap;
   user-select: none;
 }
 
 .button:focus-visible {
-  outline: 2px solid var(--ds-color-border-focus);
+  outline: 2px solid var(--ds-blue-500);
   outline-offset: 2px;
 }
 
 /* ─── Sizes ───────────────────────────────────────────────── */
 .size-sm {
-  padding: var(--ds-space-1) var(--ds-space-3);
-  font-size: var(--ds-font-size-sm);
+  padding: var(--ds-space-100) var(--ds-space-300);
+  font-size: var(--ds-scale-02);
   min-height: 32px;
 }
 
 .size-md {
-  padding: var(--ds-space-2) var(--ds-space-4);
-  font-size: var(--ds-font-size-md);
+  padding: var(--ds-space-200) var(--ds-space-400);
+  font-size: var(--ds-scale-03);
   min-height: 40px;
 }
 
 .size-lg {
-  padding: var(--ds-space-3) var(--ds-space-6);
-  font-size: var(--ds-font-size-lg);
+  padding: var(--ds-space-300) var(--ds-space-600);
+  font-size: var(--ds-scale-04);
   min-height: 48px;
 }
 
 /* ─── Variants ────────────────────────────────────────────── */
 .variant-primary {
-  background-color: var(--ds-color-action-primary-default);
-  color: var(--ds-color-action-primary-text);
+  background-color: var(--ds-background-brand-default);
+  color: var(--ds-text-brand-on-brand);
 }
 
 .variant-primary:hover:not(:disabled) {
-  background-color: var(--ds-color-action-primary-hover);
+  background-color: var(--ds-background-brand-hover);
 }
 
 .variant-secondary {
-  background-color: var(--ds-color-action-secondary-default);
-  color: var(--ds-color-action-secondary-text);
-  border-color: var(--ds-color-action-secondary-border);
+  background-color: var(--ds-background-default-secondary);
+  color: var(--ds-text-default-default);
+  border-color: var(--ds-border-default-default);
 }
 
 .variant-secondary:hover:not(:disabled) {
-  background-color: var(--ds-color-action-secondary-hover);
+  background-color: var(--ds-background-default-secondary-hover);
 }
 
 .variant-danger {
-  background-color: var(--ds-color-action-danger-default);
-  color: var(--ds-color-action-danger-text);
+  background-color: var(--ds-background-danger-default);
+  color: var(--ds-text-danger-on-danger);
 }
 
 .variant-danger:hover:not(:disabled) {
-  background-color: var(--ds-color-action-danger-hover);
+  background-color: var(--ds-background-danger-hover);
 }
 
 .variant-ghost {
   background-color: transparent;
-  color: var(--ds-color-text-default);
+  color: var(--ds-text-default-default);
 }
 
 .variant-ghost:hover:not(:disabled) {
-  background-color: var(--ds-color-bg-subtle);
+  background-color: var(--ds-background-default-secondary);
 }
 
 /* ─── States ──────────────────────────────────────────────── */
 .button:disabled,
 .loading {
-  background-color: var(--ds-color-action-disabled-bg);
-  color: var(--ds-color-action-disabled-text);
-  border-color: var(--ds-color-action-disabled-border);
+  background-color: var(--ds-background-disabled-default);
+  color: var(--ds-text-disabled-default);
+  border-color: var(--ds-border-disabled-default);
   cursor: not-allowed;
   pointer-events: none;
 }

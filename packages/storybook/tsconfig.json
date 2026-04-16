@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "@ds/components": ["../components/src/index.ts"],
+      "@ds/tokens": ["../tokens/src/index.ts"],
+      "@ds/tokens/css": ["../tokens/src/tokens.css"]
+    }
+  },
+  "include": [".storybook/**/*", "stories/**/*"],
+  "exclude": ["node_modules"]
+}

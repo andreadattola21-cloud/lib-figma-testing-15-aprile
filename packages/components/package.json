@@ -14,7 +14,7 @@
   "sideEffects": false,
   "files": ["dist"],
   "scripts": {
-    "build": "webpack --config webpack.config.js",
+    "build": "webpack --config webpack.config.js && tsc --emitDeclarationOnly",
     "dev": "webpack --config webpack.config.js --watch",
     "test": "jest --passWithNoTests",
     "lint": "eslint src --ext .ts,.tsx",

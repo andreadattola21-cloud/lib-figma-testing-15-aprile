@@ -17,29 +17,36 @@ without needing repeated instructions.
 - Prefer composition over duplication: if a new design looks like an
   existing component with minor variations, extend via props.
 
-## 2. Implementation Flow
+## 2. Mandatory Implementation Flow
 
-When asked to implement a Figma frame:
+When asked to implement a Figma frame, ALL of these steps are mandatory:
 
-1. `get_design_context` — understand layout and structure
-2. `get_screenshot` — verify visual fidelity
-3. `get_variable_defs` — extract all tokens used
+1. `get_design_context` — understand layout, flex values, spacing, tokens
+2. `get_metadata` — extract exact pixel dimensions for EVERY node
+3. `get_variable_defs` — map Figma variables to `--ds-*` tokens
 4. `get_code_connect_map` — check for existing component mappings
 5. Implement using existing components where possible
-6. Generate only the delta (new components or new compositions)
+6. **Cross-check**: compare every CSS value against `get_metadata` dimensions
+7. Generate only the delta (new components or new compositions)
+
+Never skip `get_metadata`. Never guess pixel values.
 
 ## 3. Token Usage
 
-| Figma variable category | CSS custom property prefix |
-|------------------------|---------------------------|
-| Color                  | `--ds-color-*`            |
-| Spacing                | `--ds-space-*`            |
-| Border radius          | `--ds-radius-*`           |
-| Typography             | `--ds-font-*`, `--ds-line-height-*` |
-| Shadow                 | `--ds-shadow-*`           |
-| Transition             | `--ds-transition-*`       |
+| Figma variable category | CSS custom property prefix | Example |
+|------------------------|---------------------------|---------|
+| Color (primitives)     | `--ds-gray-*`, `--ds-blue-*`, `--ds-red-*` | `--ds-gray-800` |
+| Color (semantic)       | `--ds-text-*`, `--ds-background-*`, `--ds-border-*`, `--ds-icon-*` | `--ds-text-default-default` |
+| Spacing                | `--ds-space-*`            | `--ds-space-400` = 16px |
+| Border radius          | `--ds-radius-*`           | `--ds-radius-200` = 8px |
+| Typography size        | `--ds-scale-*`            | `--ds-scale-03` = 16px |
+| Font family            | `--ds-family-*`           | `--ds-family-sans` |
+| Font weight            | `--ds-weight-*`           | `--ds-weight-bold` |
+| Stroke                 | `--ds-stroke-*`           | `--ds-stroke-border` = 1px |
+| Shadow / depth         | `--ds-depth-*`            | `--ds-depth-200` |
 
 Run `get_variable_defs` if unsure which token to use — never guess values.
+If a semantic token resolves to `#NaN`, use the primitive color token instead.
 
 ## 4. Component Conventions
 
@@ -47,10 +54,36 @@ Run `get_variable_defs` if unsure which token to use — never guess values.
 - Props interface extends the relevant HTML element attributes
 - CSS Modules for all component styles (files named `*.module.css`)
 - No `any` in TypeScript
+- Always `import type { ... } from "react"` — never bare `React.HTMLAttributes`
 - Accessibility: use semantic HTML, `aria-*` attributes, focus-visible styles
 - Every interactive component handles keyboard events
+- Always spread `...props` on root element to forward native HTML attributes
 
-## 5. File Placement
+## 5. Code Connect Rules (CRITICAL)
+
+### File format
+- Extension: `.figma.tsx` (NEVER `.figma.ts` — JSX requires `.tsx`)
+- Figma URLs: string literals only (template literals rejected by parser)
+- Node IDs: from `get_code_connect_suggestions` `mainComponentNodeId` (NEVER instance IDs)
+
+### Mapping strategy
+- **Primitives with Figma properties**: use `figma.string()`, `figma.enum()`, `figma.boolean()`
+- **Data-driven compositions** (props are arrays like `items[]`, `columns[]`): use static examples, NO `figma.children()`, NO `props` block
+- **Components with ReactNode children**: use `figma.children("*")` or `figma.children("LayerName")`
+
+### Callback props
+ALL callback/event handler props MUST use `() => {}` in examples.
+NEVER reference undefined variables like `navigate`, `setActiveTab`, `setOpenIndex`.
+
+### Empty props
+NEVER use `props: {}` (empty). Either map real properties or omit `props` entirely.
+
+### The `figma.children()` rule
+`figma.children()` returns `ReactNode[]`. ONLY use it when the React component
+prop accepts `ReactNode` or `ReactNode[]`. If the prop accepts a data array
+(e.g. `FooterLinkColumn[]`, `AccordionItemData[]`), use a static example instead.
+
+## 6. File Placement
 
 ```
 packages/components/src/
@@ -60,19 +93,25 @@ packages/components/src/
   hooks/         ← shared React hooks
 ```
 
-## 6. Assets
+Every component needs: `.types.ts`, `.module.css`, `.tsx`, `.test.tsx`, `index.ts`
 
-- If `get_design_context` returns a `localhost:*` source for an image or
-  SVG, use it directly as the `src` — do not re-import from a package.
-- Do not add new icon packages. Use the icons available in
-  `packages/components/src/icons/`.
+## 7. Layout — Never Guess Flex Values
 
-## 7. What NOT to do
+- Call `get_design_context` with `disableCodeConnect: true` for raw layout values
+- Extract EXACT flex properties from the output:
+  - `flex-wrap` vs no wrap
+  - `flex-[1_0_0]` → `flex: 1 0 0` (shrink value matters!)
+  - `min-w-[300px]` → `min-width: 300px`
+- Do NOT substitute your own values
+- `flex-wrap` + `min-width` + `flex: 1 0 0` = natural reflow, no media queries needed
+
+## 8. What NOT to do
 
 - Do not import from `react-dom` directly in component files
-- Do not use `style={{ ... }}` with hardcoded values on any element
+- Do not use `style={{ ... }}` with hardcoded values
 - Do not create duplicate abstractions — search existing components first
 - Do not write component-level CSS that belongs in a global reset
 - Do not add `!important` to any CSS rule
 - Do not generate entire page implementations in one call —
   work section by section to avoid large-frame performance issues
+- Do not assume `width: 100%` — check `get_metadata` for actual dimensions

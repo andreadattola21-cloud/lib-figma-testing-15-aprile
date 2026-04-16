@@ -4,7 +4,11 @@
     "outDir": "dist",
     "jsx": "react-jsx",
     "module": "ESNext",
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "paths": {
+      "@ds/components": ["../components/src/index.ts"],
+      "@ds/tokens": ["../tokens/src/index.ts"]
+    }
   },
   "include": ["src"]
 }

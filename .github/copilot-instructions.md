@@ -15,10 +15,20 @@
 - Components go in: `primitives/`, `compositions/`, or `layout/` under `packages/components/src/`
 
 ## Build & Test
+- Build all: `npx turbo run build` (generates ESM, CJS, CSS, and `.d.ts` declarations)
 - Tests: `cd packages/components && npx jest --no-coverage`
 - Preview: `cd packages/preview && npx webpack serve --mode development`
+- Typecheck: `npx turbo run typecheck`
 - Code Connect publish: `cd packages/code-connect && FIGMA_ACCESS_TOKEN=... npx figma connect publish`
-- No `dist/` folder — preview and storybook resolve `@ds/components` via webpack alias to source
+
+## Code Connect Rules (CRITICAL)
+- Files with JSX must use `.figma.tsx` extension (NEVER `.figma.ts`)
+- Figma URLs must be **string literals** — template literals are rejected by the parser
+- Node IDs must come from `get_code_connect_suggestions` (`mainComponentNodeId`)
+- `figma.children()` returns `ReactNode[]` — ONLY use when the component prop accepts `ReactNode`, NEVER for data arrays (e.g. `items: ItemData[]`)
+- For data-driven compositions, use static examples with realistic data
+- All callback props in examples must use `() => {}` — never reference undefined variables
+- Never use empty `props: {}` — either map real Figma properties or omit props entirely
 
 ## Important
 - Always import types from `react` explicitly (`import type { HTMLAttributes } from "react"`) — never use `React.HTMLAttributes` without import
