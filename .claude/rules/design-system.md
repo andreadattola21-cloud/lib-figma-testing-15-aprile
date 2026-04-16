@@ -83,6 +83,28 @@ NEVER use `props: {}` (empty). Either map real properties or omit `props` entire
 prop accepts `ReactNode` or `ReactNode[]`. If the prop accepts a data array
 (e.g. `FooterLinkColumn[]`, `AccordionItemData[]`), use a static example instead.
 
+### Child component nesting (MANDATORY)
+> 📖 **Official Figma docs**: "The nested instance also must be connected separately."
+> "Make sure to connect the backing component of that instance, not the instance itself."
+
+When connecting a composition, the parent's Code Connect does NOT cover children.
+Every Figma component visible in Dev Mode needs its own `figma.connect()` call.
+
+Steps:
+1. After creating parent Code Connect, call `get_code_connect_suggestions` on parent
+2. For each unmapped child: create a React primitive if reusable, then a `.figma.tsx`
+3. Simple children (bold text, single link) can be connected as native elements
+4. Publish with `--skip-validation` (external library nodes may fail strict validation)
+5. Verify: `get_code_connect_suggestions` should return empty list
+
+### Conditional rendering in examples
+> 📖 **Official Figma docs**: "Logical operators such as ternaries or conditionals
+> will be output verbatim in your example code rather than executed."
+
+Use `figma.boolean("PropName", { true: <Element />, false: undefined })` to
+conditionally include elements. Do NOT use `{expr && <Tag/>}` or ternaries
+with mapped props — the parser may reject them or output them as literal text.
+
 ## 6. File Placement
 
 ```

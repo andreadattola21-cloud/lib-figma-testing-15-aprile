@@ -22,7 +22,10 @@ followed every time components are generated from Figma.
 
 ## 3. Code Connect — Extension and URL rules
 
-- Files containing JSX must use `.figma.tsx` extension, not `.ts`.
+> 📖 **Official Figma docs**: Code Connect files use `.figma.tsx` for React JSX.
+> "Make sure to connect the backing component of that instance, not the instance itself."
+
+🔧 **From practical experience**:
 - Figma URLs must be string literals — template literals are rejected by the parser.
 - Node IDs must come from `get_code_connect_suggestions`, never use placeholders
   or instance IDs from URLs.
@@ -59,6 +62,8 @@ example: () => (
 
 ## 5. Code Connect — Callback props
 
+🔧 **From practical experience** (TS compilation error, not CC parser):
+
 All callback/event handler props MUST use noop `() => {}` in examples.
 NEVER reference undefined variables:
 
@@ -73,6 +78,8 @@ onToggle={() => {}}
 ```
 
 ## 6. Code Connect — Empty props
+
+🔧 **From practical experience**:
 
 NEVER use `props: {}` (empty object). It provides no value to developers.
 Either map real Figma properties or omit the `props` block entirely.
@@ -102,3 +109,43 @@ Either map real Figma properties or omit the `props` block entirely.
 9. Create Code Connect (`.figma.tsx`) following data-driven vs children rules
 10. Typecheck: `npx tsc --noEmit` in code-connect package
 11. Publish and verify success
+
+## 9. Child component Code Connect — MANDATORY nesting rule
+
+> 📖 **Official Figma docs**: "The nested instance also must be connected separately."
+> "Make sure to connect the backing component of that instance, not the instance itself."
+
+When connecting a composition, the parent's Code Connect does NOT cover children.
+Every Figma component visible in Dev Mode needs its own `figma.connect()` call.
+
+### Workflow:
+1. After parent Code Connect, call `get_code_connect_suggestions` on parent node
+2. The response lists all unmapped children with `mainComponentNodeId`
+3. For each child:
+   a. Call `get_context_for_code_connect` to understand its Figma properties
+   b. Create a React primitive if reusable, or connect as native element if simple
+   c. Create a `.figma.tsx` with proper property mappings
+4. Publish with `--skip-validation` (external library nodes may fail validation)
+5. Verify: call `get_code_connect_suggestions` again — list should be empty
+
+## 10. Code Connect — Conditional rendering in examples
+
+> 📖 **Official Figma docs**: "Logical operators such as ternaries or conditionals
+> will be output verbatim in your example code rather than executed."
+
+🔧 **From practical experience**: the parser may also outright **reject** `{expr && <Tag/>}`
+with a `ParserError`, not just output it verbatim.
+
+Use `figma.boolean("PropName", { true: <Element />, false: undefined })` instead.
+
+## 11. Code Connect — Parser-breaking patterns
+
+🔧 **All from practical experience** (NOT documented by Figma):
+
+| Pattern | Parser behavior | Workaround |
+|---|---|---|
+| `title?.text` (optional chaining on mapped prop) | `ParserError: Could not find prop mapping` | Use static string or simpler mapping |
+| Template literal URL `` `https://...` `` | Parser rejects, requires string literal | Use `"https://..."` |
+| `figma.children("Slot")` on data-driven component | Returns `ReactNode[]`, type mismatch at TS level | Use static example with data |
+| `props: {}` (empty) | No error, but useless for developers | Map real props or omit `props` |
+| Referencing undefined vars (`navigate`) | TS compilation error | Use `() => {}` |

@@ -39,8 +39,15 @@ Browsers silently ignore `font-weight: 600px` and fall back to `normal` (400).
 - The combination of `flex-wrap` + `min-width` + `flex: 1 0 0` creates natural reflow without any media query
 
 ## 4. Code Connect file rules
+
+🔧 **From practical experience** (parser errors, not in Figma docs):
 - Files containing JSX must use `.figma.tsx` extension, not `.ts`
 - Figma URLs must be string literals — template literals are rejected by the parser
+- Optional chaining on mapped props (`title?.text`) causes `ParserError`
+- `{expr && <Tag/>}` may crash the parser — use `figma.boolean` mapping instead
+
+> 📖 **Official Figma docs**: "Make sure to connect the backing component of that instance, not the instance itself."
+
 - Node IDs must come from `get_code_connect_suggestions` `mainComponentNodeId`, never use instance node IDs from URLs
 - Always run `npx figma connect publish` and verify success before moving on
 
@@ -57,12 +64,21 @@ Before writing Code Connect, read the component's `.types.ts` to determine the p
 `figma.children()` returns `ReactNode[]` — it CANNOT be passed to a prop that expects a typed data array.
 
 ## 6. Code Connect — callback and empty props
-- All callback props (onClick, onToggle, onTabChange) MUST use `() => {}` — NEVER reference undefined variables
+
+🔧 **From practical experience**:
+- All callback props (onClick, onToggle, onTabChange) MUST use `() => {}` — referencing undefined vars is a TS error
 - NEVER use `props: {}` (empty object) — either map real Figma properties or omit `props`
+
+## 7. Code Connect — conditional rendering
+
+> 📖 **Official Figma docs**: "Logical operators such as ternaries or conditionals
+> will be output verbatim in your example code rather than executed."
+
+Use `figma.boolean("PropName", { true: <Element />, false: undefined })` instead.
 
 ## 8. Child component Code Connect — MANDATORY nesting rule
 
-**Official Figma docs: "The nested instance also must be connected separately."**
+> 📖 **Official Figma docs**: "The nested instance also must be connected separately."
 
 When creating a Code Connect for a composition (Footer, Header, Card Grid, etc.),
 the parent's mapping does NOT automatically cover child library components.
