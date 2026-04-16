@@ -196,6 +196,7 @@ Does the React component accept ReactNode children?
 | Hardcoded `fileKey` from env var | Code Connect needs literal URLs | Use full string literal URL |
 | Skipping child components | Children show "No code connected" in Dev Mode | Connect each child separately |
 | `title?.text` in example JSX | Code Connect parser rejects optional chaining on mapped props | Use static fallback string or simpler prop mapping |
+| `{expr && <Tag/>}` conditional rendering | Code Connect parser can't resolve `&&` logical expressions | Render element unconditionally; use `figma.boolean` true/false mapping to control inclusion |
 
 ## 8. Child component nesting (MANDATORY)
 
