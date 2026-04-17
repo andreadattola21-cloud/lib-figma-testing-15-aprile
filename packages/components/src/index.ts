@@ -22,6 +22,18 @@ export type { TextLinkListProps } from "./primitives/TextLinkList";
 export { TextLinkListItem } from "./primitives/TextLinkListItem";
 export type { TextLinkListItemProps } from "./primitives/TextLinkListItem";
 
+export { TextContentTitle } from "./primitives/TextContentTitle";
+export type {
+  TextContentTitleProps,
+  TextContentTitleAlign,
+} from "./primitives/TextContentTitle";
+
+export { ButtonGroup } from "./primitives/ButtonGroup";
+export type {
+  ButtonGroupProps,
+  ButtonGroupAlign,
+} from "./primitives/ButtonGroup";
+
 // ─── Layout ─────────────────────────────────────────────────
 export { Flex } from "./layout/Flex";
 export type {
@@ -46,3 +58,9 @@ export type {
   CardGridTestimonialsProps,
   TestimonialData,
 } from "./compositions/CardGridTestimonials";
+
+export { HeroActions } from "./compositions/HeroActions";
+export type { HeroActionsProps } from "./compositions/HeroActions";
+
+export { Header } from "./compositions/Header";
+export type { HeaderProps, HeaderNavItem } from "./compositions/Header";

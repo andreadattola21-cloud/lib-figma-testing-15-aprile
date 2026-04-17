@@ -2,10 +2,13 @@ import { useState } from "react";
 import { ButtonShowcase } from "./pages/ButtonShowcase";
 import { FooterShowcase } from "./pages/FooterShowcase";
 import { TestimonialsShowcase } from "./pages/TestimonialsShowcase";
+import { HeroActionsShowcase } from "./pages/HeroActionsShowcase";
+import { HeaderShowcase } from "./pages/HeaderShowcase";
 import { FullPage } from "./pages/FullPage";
+import { HomePageShowcase } from "./pages/HomePageShowcase";
 import styles from "./App.module.css";
 
-type Page = "components" | "full-page";
+type Page = "components" | "full-page" | "home-page";
 
 export function App() {
   const [page, setPage] = useState<Page>("components");
@@ -27,6 +30,12 @@ export function App() {
           >
             Full Page
           </button>
+          <button
+            className={`${styles["navButton"]} ${page === "home-page" ? styles["navButtonActive"] : ""}`}
+            onClick={() => setPage("home-page")}
+          >
+            Home Page
+          </button>
         </nav>
       </header>
 
@@ -34,11 +43,14 @@ export function App() {
         {page === "components" && (
           <>
             <ButtonShowcase />
+            <HeaderShowcase />
+            <HeroActionsShowcase />
             <TestimonialsShowcase />
             <FooterShowcase />
           </>
         )}
         {page === "full-page" && <FullPage />}
+        {page === "home-page" && <HomePageShowcase />}
       </main>
     </div>
   );

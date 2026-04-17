@@ -1,0 +1,52 @@
+/* ─── Base ────────────────────────────────────────────────── */
+.textContentTitle {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-200);
+  font-family: var(--ds-family-sans), sans-serif;
+}
+
+/* ─── Alignment ───────────────────────────────────────────── */
+.align-left {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.align-center {
+  align-items: center;
+  text-align: center;
+}
+
+.align-right {
+  align-items: flex-end;
+  text-align: right;
+}
+
+/* ─── Title ───────────────────────────────────────────────── */
+.title {
+  margin: 0;
+  font-size: var(--ds-title-hero-size);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -2.16px;
+  color: var(--ds-text-default-default);
+  width: 100%;
+}
+
+/* ─── Subtitle ────────────────────────────────────────────── */
+.subtitle {
+  margin: 0;
+  font-size: var(--ds-subtitle-size-base);
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--ds-text-default-secondary);
+  width: 100%;
+}
+
+/* ─── Mobile ──────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .title {
+    font-size: 48px;
+    letter-spacing: -0.96px;
+  }
+}

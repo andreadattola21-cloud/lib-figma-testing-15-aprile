@@ -1,0 +1,25 @@
+/* ─── Base ────────────────────────────────────────────────── */
+.buttonGroup {
+  display: flex;
+  gap: var(--ds-space-400);
+  align-items: center;
+}
+
+/* ─── Alignment ───────────────────────────────────────────── */
+.align-start {
+  justify-content: flex-start;
+}
+
+.align-center {
+  justify-content: center;
+}
+
+.align-end {
+  justify-content: flex-end;
+}
+
+/* justify: each child stretches equally */
+.align-justify > * {
+  flex: 1 0 0;
+  min-width: 0;
+}

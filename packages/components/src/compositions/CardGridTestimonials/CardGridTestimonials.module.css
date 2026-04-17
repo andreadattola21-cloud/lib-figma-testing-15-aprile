@@ -45,3 +45,14 @@
   flex: 1 0 0;
   min-width: 300px;
 }
+
+/* ─── Mobile ──────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .section {
+    padding: var(--ds-space-600);
+  }
+
+  .grid {
+    gap: var(--ds-space-600);
+  }
+}
