@@ -200,3 +200,202 @@ The Code Connect UI is useful for rapid initial mapping before adding full snipp
 > implementation showing React components, Storybook, Code Connect templates,
 > and REST API variable sync. Also has a Stencil/web components version.
 > Use it as a reference for conventions and patterns.
+
+## 14. Asset Handling Rules (CRITICAL)
+
+> 📖 **From official `figma-implement-design` skill**: Handle assets from the MCP response correctly.
+
+### Icons and images:
+- `get_design_context` returns **asset download URLs** for icons/images used in the design
+- Use these URLs directly in `<img>` tags for preview/showcase implementations
+- **NEVER** recreate SVGs by hand — they will look different from the Figma design
+- **NEVER** import new icon packages (e.g. `lucide-react`, `heroicons`) unless they are already in the project
+- **NEVER** create placeholder images or placeholder icons — use the real asset URLs
+- For production builds, download the assets and serve them from `public/` or through a CDN
+
+### Asset URL format:
+```
+https://www.figma.com/api/mcp/asset/{assetId}
+```
+
+### When no asset URL is provided:
+- If the design references an icon that isn't in the MCP response, check `packages/components/src/icons/` first
+- If it's not there, ask the user — do NOT install new packages or create placeholders
+
+## 15. Handling Truncated Responses
+
+> 📖 **From official `figma-implement-design` skill**: Large or complex designs may return truncated responses.
+
+When `get_design_context` returns a truncated or very large response:
+1. **Don't panic** — this is normal for complex pages
+2. Use `get_metadata` first to understand the high-level structure and identify children
+3. Call `get_design_context` on **individual child nodes** instead of the entire frame
+4. Stitch together the results: each child's code + the parent's layout properties
+5. If a single node is still too large, break it down further
+
+### Recommended approach for complex pages:
+```
+1. get_metadata(rootNode)          → identify sections/children
+2. get_design_context(rootNode)    → get overall layout (may be truncated)
+3. get_design_context(child1)      → get first section's full code
+4. get_design_context(child2)      → get second section's full code
+5. ... repeat for each section
+6. Combine: parent layout + children implementations
+```
+
+## 16. Implementation Validation Checklist
+
+> 📖 **From official `figma-implement-design` skill**: Verify 1:1 visual parity before declaring done.
+
+After implementing a component or page, verify each category:
+
+### Layout
+- [ ] Flex direction matches (row vs column)
+- [ ] Flex-wrap matches (wrap vs nowrap)
+- [ ] Gap values match `get_metadata` pixel dimensions
+- [ ] Padding matches (check all four sides — Figma often uses asymmetric padding)
+- [ ] Max-width or fixed width matches
+- [ ] Min-width constraints match
+- [ ] Flex grow/shrink values match exactly (`flex: 1 0 0` ≠ `flex: 1`)
+
+### Typography
+- [ ] Font family uses `var(--ds-family-*)` token
+- [ ] Font size uses `var(--ds-scale-*)` token
+- [ ] Font weight uses raw numeric value (NOT `var(--ds-weight-*)` — broken)
+- [ ] Line height matches design
+- [ ] Text color uses `var(--ds-text-*)` token
+- [ ] Text alignment matches
+
+### Colors
+- [ ] Background colors use `var(--ds-background-*)` tokens
+- [ ] Border colors use `var(--ds-border-*)` tokens
+- [ ] No hardcoded hex values anywhere
+
+### Interactive States (if applicable)
+- [ ] Hover state matches design
+- [ ] Focus-visible state present on all interactive elements
+- [ ] Active/pressed state matches
+- [ ] Disabled state with `pointer-events: none` and reduced opacity
+
+### Responsive Behavior
+- [ ] Only add responsive CSS if Figma explicitly shows different viewport layouts
+- [ ] `flex-wrap` + `min-width` creates natural reflow without media queries
+- [ ] Don't invent breakpoints — Figma designs are static
+
+### Assets
+- [ ] All icons/images use asset URLs from `get_design_context`
+- [ ] No placeholder images or icons
+- [ ] Asset alt text is meaningful (not "image" or "icon")
+
+### Accessibility
+- [ ] Semantic HTML elements used (`nav`, `header`, `footer`, `section`, `main`)
+- [ ] ARIA attributes present (see component-development.instructions.md)
+- [ ] Focus order is logical
+- [ ] Color contrast meets WCAG 2.1 AA
+
+## 17. MCP Tool Reference
+
+> 📖 **Complete list of MCP tools** available from the Figma MCP server.
+> Always pass `clientFrameworks: "react"` and `clientLanguages: "typescript,css"` when calling these tools.
+
+### Design inspection tools (read from Figma):
+
+| Tool | Purpose | When to use |
+|------|---------|-------------|
+| `get_metadata` | XML structure with node types, names, positions, sizes | First call — understand structure before diving in |
+| `get_screenshot` | Visual reference image of a node | Every implementation — primary visual verification |
+| `get_design_context` | Reference code (Tailwind-style) + Code Connect + variables + asset URLs | Main design data — layout, tokens, asset URLs |
+| `get_code_connect_map` | Existing Code Connect mappings for nodes | Before creating components — reuse what exists |
+| `get_variable_defs` | Variable definitions (name, value, code syntax) | Token mapping — know which `--ds-*` to use |
+| `search_design_system` | Search for components, variables, styles in libraries | Finding existing design system assets to reuse |
+
+### Code Connect tools:
+
+| Tool | Purpose | When to use |
+|------|---------|-------------|
+| `get_code_connect_suggestions` | AI suggestions for mapping components to code | Before creating Code Connect — get real `mainComponentNodeId` values |
+| `get_context_for_code_connect` | Component properties, variants, descendant tree | When writing Code Connect template files (parser-based or parserless) |
+| `send_code_connect_mappings` | Batch save multiple Code Connect mappings via MCP | Lightweight mapping: component → source file (no `.figma.tsx` needed) |
+| `add_code_connect_map` | Create a single Code Connect mapping via MCP | For parserless template-based mappings with `template` parameter |
+
+### Figma write tools (create/modify IN Figma):
+
+| Tool | Purpose | When to use |
+|------|---------|-------------|
+| `use_figma` | Execute Plugin API JavaScript in Figma | Creating/modifying designs IN Figma (not for code generation) |
+| `generate_figma_design` | Capture web page and convert to Figma design | Push a running web app into a Figma file |
+| `create_new_file` | Create a new blank Figma file | When you need a fresh file before `use_figma` |
+| `generate_diagram` | Create FigJam diagrams from Mermaid syntax | Flowcharts, sequence diagrams, Gantt charts |
+| `get_figjam` | Convert FigJam board to XML | Reading FigJam whiteboards |
+
+### Utility tools:
+
+| Tool | Purpose | When to use |
+|------|---------|-------------|
+| `create_design_system_rules` | Generate agent rules from design system | One-time setup: auto-generates CLAUDE.md/AGENTS.md/.cursor rules |
+| `whoami` | Authenticated user identity and plan info | Debugging permissions, verifying auth |
+
+### Two approaches to Code Connect mapping:
+
+| Approach | MCP tool | Files created | Depth |
+|----------|----------|--------------|-------|
+| **Deep snippets** (our approach) | `figma connect publish` CLI | `.figma.tsx` in codebase | Maps properties, variants, children with JSX examples |
+| **Lightweight mapping** | `send_code_connect_mappings` MCP tool | None (stored in Figma) | Links component → source file path |
+
+Use **deep snippets** for core design system components with many variants.
+Use **lightweight mapping** for quick coverage of many components at once.
+
+## 18. Skill Routing — Which Skill to Use When
+
+| User intent | Correct skill | Description |
+|-------------|--------------|-------------|
+| "Implement this Figma design" | `generate-component` | Full pipeline: Figma → React component + CSS + tests + Code Connect |
+| "Connect this component to Figma" | `figma-code-connect` | Create/update `.figma.tsx` mapping file only |
+| "Quick-map many components" | (manual) Call `send_code_connect_mappings` | Lightweight batch mapping without files |
+| "Create design system rules" | (manual) Call `create_design_system_rules` MCP tool | Auto-generates agent instruction files |
+| "What design tokens are used?" | (manual) Call `get_variable_defs` | Lists all variables with code syntax |
+| "Show me what this Figma node looks like" | (manual) Call `get_screenshot` | Returns visual reference |
+| "Create/edit designs IN Figma" | (manual) Call `use_figma` (load `figma-use` skill first) | Plugin API JavaScript execution |
+| "Push this web page to Figma" | (manual) Call `generate_figma_design` | Captures running web app → Figma |
+
+### Skill boundaries:
+- **`generate-component`** handles the full pipeline end-to-end. Use it when creating new components from scratch.
+- **`figma-code-connect`** handles ONLY the Code Connect mapping. Use it when a component already exists in code but needs a Figma connection, or when fixing broken/incomplete Code Connect files.
+- **`use_figma`** is for writing to Figma (creating nodes, variables, components IN Figma). Never use it for code generation.
+- **`generate_figma_design`** is for capturing web pages into Figma files. Not for code generation.
+- If the user says "implement" or "create from Figma" → `generate-component`
+- If the user says "connect", "map", or "link" → `figma-code-connect`
+- If the user says "create in Figma", "push to Figma", "build screen in Figma" → `use_figma` + `figma-generate-design` skill
+- If unsure, default to `generate-component` (it includes Code Connect creation)
+
+## 19. Troubleshooting
+
+> 📖 **From official `figma-implement-design` skill**: Common issues and solutions.
+
+### Figma output is truncated
+**Cause**: The design is too complex for a single response.
+**Solution**: Use `get_metadata` to get node structure, then fetch individual child nodes with `get_design_context`.
+
+### Assets not loading
+**Cause**: The MCP server's assets endpoint is not accessible or URLs are being modified.
+**Solution**: Use asset URLs from `get_design_context` directly. They're served via the MCP server — do NOT modify them.
+
+### Design doesn't match after implementation
+**Cause**: Visual discrepancies between code and Figma design.
+**Solution**: Compare side-by-side with screenshot from `get_screenshot`. Check spacing, colors, typography values in the design context data.
+
+### Design token values differ from Figma
+**Cause**: Project tokens have different values than Figma specs.
+**Solution**: Prefer project tokens for consistency but adjust spacing/sizing to maintain visual fidelity. When our `--ds-*` token has `#NaN`, fall back to primitive color tokens.
+
+### "No published components found" (Code Connect)
+**Cause**: The Figma component is not published to a team library.
+**Solution**: Components must be published to a team library before Code Connect works. Code Connect requires Organization or Enterprise plan.
+
+### "Published component not found" (send_code_connect_mappings)
+**Cause**: Source file path is incorrect or component name doesn't match actual export.
+**Solution**: Verify the source path is relative to project root and the component is properly exported.
+
+### Code Connect publish fails with parser error
+**Cause**: Template literal URL, JSX in `.ts` file, optional chaining on mapped props, or conditional rendering.
+**Solution**: See anti-patterns in section 4 and `code-connect.instructions.md`.

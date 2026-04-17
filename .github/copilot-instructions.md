@@ -44,6 +44,40 @@ and passed through MCP — read and follow them.
 - All callback props in examples must use `() => {}` — never reference undefined variables
 - Never use empty `props: {}` — either map real Figma properties or omit props entirely
 
+## Asset Handling Rules (CRITICAL)
+- `get_design_context` returns asset download URLs for icons/images — use them directly in `<img>` tags
+- NEVER recreate SVGs by hand — they will differ from the Figma design
+- NEVER import new icon packages unless they already exist in the project
+- NEVER create placeholder images or placeholder icons
+- Check `packages/components/src/icons/` first for existing icons
+
+## Figma MCP Tool Reference
+
+| Tool | Purpose |
+|------|---------|
+| `get_metadata` | Structure, node types, pixel dimensions |
+| `get_screenshot` | Visual reference image |
+| `get_design_context` | Reference code, Code Connect, variables, asset URLs |
+| `get_code_connect_map` | Existing Code Connect mappings |
+| `get_variable_defs` | Variable definitions with code syntax |
+| `get_code_connect_suggestions` | AI suggestions + real node IDs |
+| `get_context_for_code_connect` | Component properties and descendant tree |
+| `search_design_system` | Search library components, variables, styles |
+
+Always pass `clientFrameworks: "react"` and `clientLanguages: "typescript,css"` to MCP tools.
+
+## Skill Routing
+| Intent | Skill |
+|--------|-------|
+| Implement a Figma design as React | `generate-component` |
+| Map an existing component to Figma | `figma-code-connect` |
+
+## Handling Truncated MCP Responses
+For large/complex designs where `get_design_context` returns truncated output:
+1. Use `get_metadata` to identify children/sections
+2. Call `get_design_context` on individual child nodes
+3. Combine parent layout + children implementations
+
 ## Important
 - Always import types from `react` explicitly (`import type { HTMLAttributes } from "react"`) — never use `React.HTMLAttributes` without import
 - Every component must spread `...props` on its root element to forward native HTML attributes

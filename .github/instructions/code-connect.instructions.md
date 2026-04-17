@@ -107,3 +107,113 @@ Every Figma component visible in Dev Mode needs its own `figma.connect()` call.
    - Create a `.figma.tsx` with proper property mappings
 3. Publish all with `--skip-validation` (external library nodes may fail strict validation)
 4. Verify: `get_code_connect_suggestions` should return empty list
+
+## Parserless (Template-based) Code Connect
+
+> 📖 **From official `figma-code-connect` skill**: There is a newer "parserless" approach
+> to Code Connect that uses JavaScript template strings instead of JSX.
+
+### Two approaches to Code Connect:
+
+| Approach | File extension | Import style | Best for |
+|----------|---------------|-------------|----------|
+| **Parser-based** (our current approach) | `.figma.tsx` | `import figma from "@figma/code-connect"` | Full JSX examples with React components |
+| **Parserless template** (newer) | `.figma.ts` | `import figma from "figma"` | Framework-agnostic or non-JSX output |
+
+### This project uses parser-based (`.figma.tsx`)
+
+We use the parser-based approach because:
+1. Our components are React — JSX examples are natural and type-safe
+2. We import real components from `@ds/components` — the parser validates imports
+3. `figma.config.json` is configured for `parser: "react"` with include patterns
+
+### Parserless template syntax (for reference):
+```ts
+// url=https://www.figma.com/design/FILE_KEY?node-id=NODE_ID
+// source=packages/components/src/primitives/Button/Button.tsx
+// component=Button
+import figma from "figma" // NOT "@figma/code-connect"
+const instance = figma.selectedInstance
+
+const label = instance.getString("Label")
+const variant = instance.getEnum("Variant", {
+  Primary: "primary",
+  Secondary: "secondary",
+})
+
+export default {
+  example: figma.tsx`<Button variant="${variant}">${label}</Button>`,
+  imports: ['import { Button } from "@ds/components"'],
+  id: "button",
+  metadata: { nestable: true }
+}
+```
+
+Key differences from parser-based:
+- Uses `import figma from "figma"` (not `"@figma/code-connect"`)
+- Uses comment headers (`// url=...`, `// source=...`, `// component=...`)
+- References `figma.selectedInstance` (not a string URL parameter)
+- Uses tagged template literals (`figma.tsx\`...\``) with `instance.getString()`, `instance.getEnum()`, etc.
+- Exports `{ example, imports, id, metadata }` object (not `figma.connect()` call)
+- Property methods: `instance.getString()`, `instance.getBoolean()`, `instance.getEnum()`, `instance.getInstanceSwap()`, `instance.findInstance()`, `instance.findText()`, `instance.findConnectedInstance()`
+- Typically published with `add_code_connect_map` MCP tool or `figma connect publish` CLI
+
+### When to consider switching to parserless:
+- If the project moves to Web Components, Vue, or Svelte
+- If you need framework-agnostic output
+- If the official Figma tooling deprecates the parser-based approach
+
+## Lightweight Code Connect via MCP (no files)
+
+> 📖 **From official `figma-power` steering**: `send_code_connect_mappings` creates shallow file-level mappings without `.figma.tsx` files.
+
+For quick coverage of many components, use `send_code_connect_mappings` directly:
+
+1. Call `get_code_connect_suggestions` to find unmapped components
+2. Match each to a source file in the codebase
+3. Call `send_code_connect_mappings` with the batch:
+   ```
+   send_code_connect_mappings(fileKey, nodeId, mappings=[
+     { nodeId: "42:15", componentName: "Button", source: "packages/components/src/primitives/Button/Button.tsx", label: "React" },
+     { nodeId: "42:20", componentName: "Badge", source: "packages/components/src/primitives/Badge/Badge.tsx", label: "React" }
+   ])
+   ```
+
+**Limitation**: This creates shallow mappings (component → file). It does NOT map individual props, variants, or children. For deep property-mapped snippets, use our `.figma.tsx` approach.
+
+**When to use which**:
+| Need | Approach |
+|------|----------|
+| Quick coverage of many components | `send_code_connect_mappings` (lightweight) |
+| Deep prop/variant/children mapping | `.figma.tsx` files (our standard approach) |
+| Non-React frameworks | Parserless `.figma.ts` templates |
+
+## Configuration: `figma.config.json`
+
+This project has a `figma.config.json` at `packages/code-connect/figma.config.json`:
+
+```json
+{
+  "codeConnect": {
+    "parser": "react",
+    "include": ["src/*.figma.tsx", "src/**/*.figma.tsx"],
+    "paths": {
+      "@ds/components": "../components/src/index.ts"
+    }
+  }
+}
+```
+
+### Configuration options:
+
+| Option | Type | Description | Our value |
+|--------|------|-------------|-----------|
+| `parser` | `string` | Parser to use (`"react"` for `.figma.tsx`) | `"react"` |
+| `include` | `string[]` | Globs for Code Connect files to publish | `["src/*.figma.tsx", "src/**/*.figma.tsx"]` |
+| `exclude` | `string[]` | Globs for files to exclude | Not set |
+| `paths` | `object` | Maps import aliases to source files (mirrors tsconfig) | `{ "@ds/components": "..." }` |
+| `label` | `string` | Label shown in Figma Dev Mode for snippets | Not set (defaults to framework name) |
+| `language` | `string` | Syntax highlighting language (`tsx`, `jsx`, `html`, etc.) | Not set (defaults to `tsx`) |
+| `documentUrlSubstitutions` | `object` | URL placeholders for multi-file projects | Not set |
+
+When adding new Code Connect files, ensure they match the `include` patterns.

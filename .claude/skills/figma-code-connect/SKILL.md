@@ -236,3 +236,65 @@ Every Figma library component visible in Dev Mode needs its own `figma.connect()
 - `figma.boolean("Has Title")` — boolean toggles
 - `figma.children("*")` — child instances (requires those children to also be connected)
 - `figma.nestedProps("LayerName", { ... })` — access child layer props from parent
+
+## Skill Boundaries
+
+### When to use `figma-code-connect`:
+- "Connect [Component] to Figma"
+- "Map this component to its Figma design"
+- "Create Code Connect for [Name]"
+- "There are unmapped components — fix Code Connect"
+- After running `generate-component` when additional children need mapping
+
+### When to use `send_code_connect_mappings` (lightweight, no files):
+- "Quick-map all components in this frame"
+- "Link these components to their source files"
+- When you need shallow coverage of many components quickly
+- This creates file-level mappings (component → source), NOT deep prop mappings
+
+### When to switch to `generate-component`:
+- The user wants a NEW component created from a Figma design
+- "Implement this Figma frame as React"
+- "Generate [Name] component from Figma"
+
+### When to use neither:
+- "What tokens does this design use?" → call `get_variable_defs` directly
+- "Show me this design" → call `get_screenshot` directly
+- "What's the structure?" → call `get_metadata` directly
+
+## Parserless (Template-based) Code Connect — Reference
+
+> 📖 **From official `figma-code-connect` skill**: There is a newer "parserless" approach.
+
+This project uses the **parser-based** approach (`.figma.tsx` with `import figma from "@figma/code-connect"`).
+The parserless approach exists but is not used here.
+
+### Key differences:
+
+| Feature | Parser-based (ours) | Parserless (template) |
+|---------|--------------------|-----------------------|
+| File extension | `.figma.tsx` | `.figma.ts` |
+| Import | `import figma from "@figma/code-connect"` | `import figma from "figma"` |
+| Component reference | `figma.connect(Component, url, config)` | `figma.tsx\`<Component />\`` with `figma.selectedInstance` |
+| Component import | Real `import { Button } from "@ds/components"` | No import needed |
+| Publishing | `figma connect publish` CLI | `add_code_connect_map` MCP tool or CLI |
+
+### Why we use parser-based:
+1. JSX examples are type-safe — TypeScript validates the component usage
+2. Real component imports ensure the code snippet stays in sync with actual API
+3. `figma.config.json` handles path resolution for `@ds/components`
+
+### `figma.config.json` (at `packages/code-connect/figma.config.json`):
+```json
+{
+  "codeConnect": {
+    "parser": "react",
+    "include": ["src/*.figma.tsx", "src/**/*.figma.tsx"],
+    "paths": {
+      "@ds/components": "../components/src/index.ts"
+    }
+  }
+}
+```
+
+New Code Connect files must match the `include` patterns to be published.

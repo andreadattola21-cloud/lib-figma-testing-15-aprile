@@ -278,3 +278,78 @@ Add a showcase page in `packages/preview/src/pages/[Name]Showcase.tsx` and regis
 - Always import types explicitly: `import type { HTMLAttributes } from "react"` — never bare `React.HTMLAttributes`
 - Every new primitive needs at minimum 4 unit tests
 - Tests MUST cover accessibility: ARIA attributes, keyboard interaction, landmark roles
+
+## Asset Handling (non-negotiable)
+
+> 📖 **From official `figma-implement-design` skill**
+
+- `get_design_context` returns **asset download URLs** for icons and images used in the design
+- Use these URLs directly with `<img>` tags in preview/showcase pages
+- **NEVER** recreate SVGs by hand — they will look different from the Figma design
+- **NEVER** import new icon packages (e.g. `lucide-react`, `heroicons`) unless already in the project
+- **NEVER** create placeholder images or placeholder icons — use the real asset URLs
+- For existing project icons, check `packages/components/src/icons/` first
+- If an icon isn't available anywhere, ask the user — do NOT fabricate it
+
+## Handling Truncated Responses
+
+When `get_design_context` returns a very large or truncated response:
+
+1. Call `get_metadata` on the root node → identify all major children/sections
+2. Call `get_design_context` on each child **individually** (not the full root)
+3. From the root call, extract only the layout properties (flex-direction, gap, padding)
+4. Combine: parent layout + individual child implementations
+5. If a child is still too large, break it down further
+
+This is expected for complex pages — don't skip any section.
+
+## Validation Checklist (before declaring done)
+
+After implementing a component, verify:
+
+### Layout ✓
+- Flex direction, flex-wrap, gap match `get_metadata`
+- Padding matches (all 4 sides — check for asymmetry)
+- Max-width / fixed width match
+- Min-width constraints match
+- `flex: 1 0 0` ≠ `flex: 1` — check the exact shorthand
+
+### Typography ✓
+- Font family → `var(--ds-family-*)`
+- Font size → `var(--ds-scale-*)`
+- Font weight → raw numeric (NOT `var(--ds-weight-*)`)
+- Text color → `var(--ds-text-*)`
+
+### Colors ✓
+- Background → `var(--ds-background-*)`
+- Borders → `var(--ds-border-*)`
+- No hardcoded hex values
+
+### Accessibility ✓
+- Semantic HTML used
+- ARIA attributes present
+- Focus-visible on interactive elements
+- Alt text on images
+
+### Assets ✓
+- Icons/images use asset URLs from `get_design_context`
+- No placeholder images, no hand-recreated SVGs
+
+## Skill Boundaries
+
+### When to use `generate-component`:
+- "Implement this Figma design"
+- "Create a component from Figma"
+- "Generate [Name] from the selected frame"
+- Any request that needs a NEW React component
+
+### When to switch to `figma-code-connect`:
+- The component already exists in code — user just wants to connect it to Figma
+- "Map this component to Figma"
+- "Create Code Connect for [Name]"
+- After publishing, if unmapped children need connecting
+
+### When to use neither (manual MCP calls):
+- "What tokens does this design use?" → `get_variable_defs`
+- "Show me what this looks like" → `get_screenshot`
+- "What's the structure of this page?" → `get_metadata`
