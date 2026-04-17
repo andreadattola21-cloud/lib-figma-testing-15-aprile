@@ -19,17 +19,25 @@ without needing repeated instructions.
 
 ## 2. Mandatory Implementation Flow
 
+> 📖 **From official Figma DevRel (Jake Albaugh)**: The recommended MCP tool sequence is:
+> metadata → screenshot → code_connect_map → variable_defs → design_context.
+
 When asked to implement a Figma frame, ALL of these steps are mandatory:
 
-1. `get_design_context` — understand layout, flex values, spacing, tokens
-2. `get_metadata` — extract exact pixel dimensions for EVERY node
-3. `get_variable_defs` — map Figma variables to `--ds-*` tokens
-4. `get_code_connect_map` — check for existing component mappings
-5. Implement using existing components where possible
-6. **Cross-check**: compare every CSS value against `get_metadata` dimensions
-7. Generate only the delta (new components or new compositions)
+1. `get_metadata` — high-level structure, exact pixel dimensions for EVERY node
+2. `get_screenshot` — visual reference for verification
+3. `get_code_connect_map` — check for existing component mappings
+4. `get_variable_defs` — map Figma variables to `--ds-*` tokens (use code syntax form)
+5. `get_design_context` — understand layout, flex values, spacing, tokens, inline CC
+6. Implement using existing components where possible
+7. **Cross-check**: compare every CSS value against `get_metadata` dimensions
+8. **Visual check**: compare rendered output against `get_screenshot`
+9. Generate only the delta (new components or new compositions)
 
-Never skip `get_metadata`. Never guess pixel values.
+Never skip `get_metadata` or `get_screenshot`. Never guess pixel values.
+
+> **Annotations**: Figma annotations (content categories, property callouts, asset references)
+> are machine-readable and passed through MCP. Read and follow them.
 
 ## 3. Token Usage
 
