@@ -4,6 +4,32 @@ applyTo: ["packages/code-connect/**", "packages/components/src/**"]
 ---
 # Figma MCP Implementation Rules
 
+> 📖 **Source**: Official Figma developer workflows (Jake Albaugh, Figma Developer Advocate)
+> plus practical experience from this project.
+
+## 0. Recommended MCP tool sequence
+
+> 📖 **From official Figma DevRel**: The recommended sequence for implementing a Figma design is:
+
+1. `get_metadata` → high-level structure, exact pixel dimensions
+2. `get_screenshot` → visual reference for verification
+3. `get_code_connect_map` → existing component mappings to reuse
+4. `get_variable_defs` → token definitions with **code syntax** (the code-form name, not Figma display name)
+5. `get_design_context` → full reference code (Tailwind-style) with inline Code Connect and variable references
+
+**NEVER skip `get_screenshot`** — it is the primary way to verify your implementation matches the design.
+
+### Annotations are machine-readable context
+> 📖 **Official**: Figma annotations (content categories, property callouts, asset references)
+> are passed through MCP responses. Designers use them to describe design intent
+> that isn't visible in the layout alone (e.g. "this content comes from the CMS",
+> "this image is in the brand-approved drive"). **Read and follow them.**
+
+### Variable code syntax
+> 📖 **Official**: Variables in Figma can have platform-specific **code syntax** (web, iOS, Android).
+> When inspecting, `get_variable_defs` returns the code-form name (e.g. `--ds-background-default-secondary-hover`)
+> not just the Figma display name. Always use the code syntax form in your implementation.
+
 ## 1. ALWAYS verify implementation against `get_metadata`
 - `get_metadata` returns exact pixel dimensions (width, height, x, y) for every node
 - Use these to set `max-width`, verify gap values, and confirm layout structure
@@ -105,14 +131,72 @@ Each Figma component visible in Dev Mode needs its own `figma.connect()` call.
 - `figma.instance("PropName")` in the parent also requires the swapped component to be connected
 - External library components (not defined in the current file) may need `--skip-validation` to publish
 - NEVER leave child components unmapped — check `get_code_connect_suggestions` until the response is empty
-1. `get_design_context` → understand structure and tokens
-2. `get_metadata` → extract exact dimensions for every node
-3. `get_variable_defs` → map Figma variables to `--ds-*` tokens
-4. `get_code_connect_map` → check for existing component mappings
-5. Read component `.types.ts` → understand prop data model
-6. Implement component + CSS
-7. **Cross-check**: compare every CSS value against metadata dimensions
-8. `get_code_connect_suggestions` → get real node IDs (mainComponentNodeId)
-9. Create Code Connect (`.figma.tsx`) following data-driven vs children rules
-10. Typecheck: `npx tsc --noEmit`
-11. Publish and verify success
+
+### Mandatory implementation verification flow:
+1. `get_metadata` → high-level structure and exact dimensions
+2. `get_screenshot` → visual reference to verify against
+3. `get_code_connect_map` → check for existing component mappings
+4. `get_variable_defs` → map Figma variables to `--ds-*` tokens (use code syntax form)
+5. `get_design_context` → understand layout, tokens, and inline Code Connect
+6. Read component `.types.ts` → understand prop data model
+7. Implement component + CSS
+8. **Cross-check**: compare every CSS value against metadata dimensions
+9. **Visual check**: compare rendered output against `get_screenshot`
+10. `get_code_connect_suggestions` → get real node IDs (mainComponentNodeId)
+11. Create Code Connect (`.figma.tsx`) following data-driven vs children rules
+12. Typecheck: `npx tsc --noEmit`
+13. Publish and verify success
+
+## 9. Beyond UI generation — other MCP use cases
+
+> 📖 **From official Figma DevRel**: The MCP server is not just for UI code generation.
+> Use it for:
+> - **Project planning**: analyze a Figma section to understand scope and estimate work
+> - **Token auditing**: verify that all variables used in the design have corresponding CSS tokens
+> - **Component usage audit**: check which design system components are used and whether they have Code Connect
+> - **Accessibility review**: inspect semantic structure, contrast, and aria patterns from design intent
+> - **Design system health**: compare Figma library components against codebase implementations
+
+## 10. Instruct your agents at workspace level
+
+> 📖 **From official Figma DevRel**: "Instruct your agents — provide workspace-level context
+> about implementation details."
+
+Your agentic tools (Copilot, Claude, Cursor) should have:
+- A defined MCP tool sequence to follow for every Figma implementation
+- Rules about which tokens to use and how to map them
+- Code Connect conventions (file extension, node ID source, anti-patterns)
+- Knowledge of the design system structure and component categories
+- Information about known bugs and workarounds (e.g. font-weight token bug)
+
+This is exactly what these instruction files provide — keep them updated as the project evolves.
+
+## 11. "Ready for Dev" and design handoff
+
+> 📖 **Official**: Designers mark sections as "Ready for Dev" in Figma.
+> Figma AI detects improvement opportunities (e.g. unnamed layers) during this step.
+> Developers see a timeline view of only ready-for-dev sections.
+> The "Focus View" scopes inspection to the marked section.
+
+When implementing from MCP, always verify that the node you're implementing has been
+marked as ready for dev. If the metadata shows the section is still in draft,
+coordinate with the designer before proceeding.
+
+## 12. Code Connect UI vs Code Connect Snippets
+
+> 📖 **Official**: There are two ways to create Code Connect:
+
+| Method | Depth | Effort | Where defined | Best for |
+|--------|-------|--------|---------------|----------|
+| **Code Connect Snippets** (`.figma.tsx` files) | Deep — maps properties, variants, children | Higher | Codebase | Core design system components with many variants |
+| **Code Connect UI** (in Figma) | Shallow — maps component to file | Lower | Figma UI | Wider coverage, quick library-to-codebase linking |
+
+This project uses **Code Connect Snippets** for production components.
+The Code Connect UI is useful for rapid initial mapping before adding full snippets.
+
+## 13. Simple Design System (SDS) reference
+
+> 📖 **Official**: The Simple Design System (github.com/figma/sds) is Figma's reference
+> implementation showing React components, Storybook, Code Connect templates,
+> and REST API variable sync. Also has a Stencil/web components version.
+> Use it as a reference for conventions and patterns.

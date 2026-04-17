@@ -4,6 +4,19 @@ applyTo: "packages/code-connect/src/**"
 ---
 # Code Connect Rules
 
+> 📖 Sources: Official Figma Code Connect docs + Jake Albaugh (Figma DevRel) developer workflows video.
+
+## Two types of Code Connect
+
+> 📖 **Official**: There are two ways to create Code Connect:
+
+| Method | Depth | Effort | Where defined | Best for |
+|--------|-------|--------|---------------|----------|
+| **Code Connect Snippets** (`.figma.tsx` files) | Deep — maps properties, variants, children | Higher | Codebase | Core DS components with many variants |
+| **Code Connect UI** (in Figma) | Shallow — maps component to file | Lower | Figma UI | Wider coverage, quick library-to-codebase linking |
+
+This project uses **Snippets** for production components. Use the UI for rapid initial mapping.
+
 ## Decision Flowchart
 
 Before writing any Code Connect file, read the component's `.types.ts`:

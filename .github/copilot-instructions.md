@@ -21,6 +21,20 @@
 - Typecheck: `npx turbo run typecheck`
 - Code Connect publish: `cd packages/code-connect && FIGMA_ACCESS_TOKEN=... npx figma connect publish`
 
+## MCP Tool Sequence (CRITICAL)
+
+> 📖 Source: Official Figma DevRel (Jake Albaugh)
+
+When implementing a Figma design, follow this exact sequence:
+1. `get_metadata` → structure and pixel dimensions
+2. `get_screenshot` → visual reference
+3. `get_code_connect_map` → existing mappings to reuse
+4. `get_variable_defs` → token definitions (use code syntax form, not Figma display name)
+5. `get_design_context` → full reference code with inline Code Connect and variables
+
+Annotations in Figma (content categories, property callouts) are machine-readable
+and passed through MCP — read and follow them.
+
 ## Code Connect Rules (CRITICAL)
 - Files with JSX must use `.figma.tsx` extension (NEVER `.figma.ts`)
 - Figma URLs must be **string literals** — template literals are rejected by the parser

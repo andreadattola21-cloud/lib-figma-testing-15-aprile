@@ -149,3 +149,21 @@ Use `figma.boolean("PropName", { true: <Element />, false: undefined })` instead
 | `figma.children("Slot")` on data-driven component | Returns `ReactNode[]`, type mismatch at TS level | Use static example with data |
 | `props: {}` (empty) | No error, but useless for developers | Map real props or omit `props` |
 | Referencing undefined vars (`navigate`) | TS compilation error | Use `() => {}` |
+
+## 12. Code Connect UI vs Code Connect Snippets
+
+> - **Snippets** (`.figma.tsx` in codebase):  maps properties, variants, children. Best for core DS components.deep > 
+> - **Code Connect UI** (in Figma):  maps component to file. Lower effort, wider coverage. Good for agentic workflows.shallow 
+
+This project uses **Snippets** for production. UI mapping is useful for rapid initial linking.
+
+## 13. Simple Design System (SDS) reference
+
+> React, Storybook, Code Connect, and REST API variable sync. Also has Stencil version.> 
+
+## 14. Instruct your agents
+
+> context about implementation details."> 
+
+These .claude/rules and .github/instructions files ARE that workspace-level context.
+Keep them updated as the project evolves.

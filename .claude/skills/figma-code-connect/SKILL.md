@@ -13,6 +13,13 @@ description: >
 Create or update a Code Connect file (`.figma.tsx`) that maps a Figma
 library component to its React counterpart in `@ds/components`.
 
+> 📖 **Official (Jake Albaugh, Figma DevRel)**: Code Connect Snippets sit in the codebase
+> alongside components. They map Figma information to code templates and get published to
+> Figma so developers see relevant code previews in Dev Mode. The snippets are also
+> supplied over MCP to agentic workflows.
+> There is also a lighter-weight **Code Connect UI** in Figma for mapping at file-level,
+> but this skill creates the deep **Snippet** form.
+
 ## When to use
 - "Connect the [ComponentName] Figma component to code"
 - "Create a code connect mapping for [Component]"

@@ -24,23 +24,38 @@ Full pipeline: Figma selection → production-ready React component in
 
 ALL of these MCP calls are **mandatory**. Never skip any.
 
-1. **`get_design_context`** on the selected Figma frame.
-   - Returns reference code (Tailwind-style) — read it to understand layout,
-     flex values, spacing, and token usage. Do NOT copy verbatim.
-   - Extract exact flex properties: `flex-wrap`, `flex: 1 0 0`, `min-width`, `gap`.
-   - Do NOT substitute your own values — use exactly what Figma specifies.
+> 📖 **Source**: Official Figma developer workflow (Jake Albaugh, Figma DevRel).
+> The recommended sequence is: metadata → screenshot → code_connect_map → variable_defs → design_context.
 
-2. **`get_metadata`** on the same node.
+1. **`get_metadata`** on the selected Figma frame.
    - Returns exact pixel dimensions (width, height, x, y) for every child node.
+   - Returns high-level structure: frames, instances, components.
    - Use these to set `max-width`, verify gap values, and confirm layout structure.
    - Do NOT assume `width: 100%` — check the actual frame width.
 
-3. **`get_variable_defs`** to list all Figma variables used (tokens).
+2. **`get_screenshot`** on the same node.
+   - Returns a visual reference image of the design.
+   - Use this to verify your implementation matches the design visually.
+   - Especially important for spacing, alignment, and icon accuracy.
+
+3. **`get_code_connect_map`** to check if any child components already
+   have Code Connect mappings — reuse them, do NOT recreate them.
+
+4. **`get_variable_defs`** to list all Figma variables used (tokens).
    - Map every Figma variable to its `--ds-*` CSS custom property.
+   - Variables include their **code syntax** — use the code form, not the Figma display name.
    - If a variable resolves to `#NaN`, use the primitive color token instead.
 
-4. **`get_code_connect_map`** to check if any child components already
-   have Code Connect mappings — reuse them, do NOT recreate them.
+5. **`get_design_context`** on the selected Figma frame.
+   - Returns reference code (Tailwind-style) — read it to understand layout,
+     flex values, spacing, and token usage. Do NOT copy verbatim.
+   - Also returns Code Connect snippets and variable references inline.
+   - Extract exact flex properties: `flex-wrap`, `flex: 1 0 0`, `min-width`, `gap`.
+   - Do NOT substitute your own values — use exactly what Figma specifies.
+
+> **Tip**: Figma annotations are machine-readable context passed through MCP.
+> If the designer added annotations (content sources, behavior notes, asset references),
+> they will appear in the MCP response. Read and follow them.
 
 ### Step 2 — Classify the component
 
